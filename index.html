@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Affair: Case Files - Web</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+    <style>
+        body { background: #000; color: #ff0000; font-family: 'Courier New', monospace; height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; }
+        #terminal { width: 90%; max-width: 900px; height: 90vh; background: #0a0000; border: 4px solid #ff0000; padding: 20px; display: flex; flex-direction: column; }
+        #output { flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 18px; color: #ff3333; }
+        #input-line { display: flex; border-top: 2px solid #ff0000; padding-top: 10px; margin-top: 10px; }
+        #prompt { color: #ff0000; margin-right: 10px; }
+        #input { background: transparent; border: none; color: #ff0000; font-family: inherit; font-size: 18px; flex: 1; outline: none; }
+    </style>
+</head>
+<body>
+    <div id="terminal">
+        <div id="output">Starting...</div>
+        <div id="input-line">
+            <span id="prompt">></span>
+            <input id="input" type="text" autofocus>
+        </div>
+    </div>
+
+    <script>
+        let pyodide = null;
+        let outputDiv = document.getElementById('output');
+
+        async function main() {
+            try {
+                outputDiv.innerText += "\nStep 1: Loading Pyodide...";
+                pyodide = await loadPyodide();
+                outputDiv.innerText += "\nStep 2: Pyodide loaded.";
+
+                window.pyodideBridge = {
+                    output: (text) => {
+                        if (text.startsWith("__SFX__")) {
+                            playSfx(text.substring(7).trim());
+                            return;
+                        }
+                        outputDiv.innerText += text;
+                        outputDiv.scrollTop = outputDiv.scrollHeight;
+                    },
+                    input: () => {
+                        return prompt("Enter command: ");
+                    }
+                };
+
+                pyodide.globals.set("bridge", window.pyodideBridge);
+                
+                outputDiv.innerText += "\nStep 3: Fetching Source Files...";
+                let gameSource = await (await fetch('game.py')).text();
+                let browserSource = await (await fetch('game_browser.py')).text();
+
+                outputDiv.innerText += "\nStep 4: Injecting Engine into Python Memory...";
+                pyodide.globals.set("game_code", gameSource);
+                pyodide.runPython(`
+import sys, types, __main__
+game_module = types.ModuleType('game')
+sys.modules['game'] = game_module
+code = globals()['game_code'].replace("if __name__ == '__main__':", "if False:").replace('if __name__ == "__main__":', 'if False:')
+exec(code, game_module.__dict__)
+if not hasattr(game_module, 'play_game'):
+    game_module.play_game = lambda: print("Error: play_game not found")
+__main__.play_game_func = game_module.play_game
+`);
+
+                outputDiv.innerText += "\nStep 5: Starting Game Loop...";
+                pyodide.runPython(browserSource);
+                pyodide.runPythonAsync("start()");
+
+            } catch (error) {
+                outputDiv.innerText += "\n\n[ERROR]\n" + error.message;
+                console.error(error);
+            }
+        }
+
+        function playSfx(name) {
+            let audio = new Audio(`audio/sfx/${name}.ogg`);
+            audio.play().catch(e => console.error('Audio failed:', e));
+        }
+
+        function startAmbient() {
+            let hum = new Audio('audio/crthum.ogg');
+            hum.loop = true;
+            hum.volume = 0.15;
+            hum.play().catch(e => console.error('Hum failed:', e));
+            scheduleFootsteps();
+            scheduleSiren();
+        }
+
+        function scheduleFootsteps() {
+            let delay = Math.random() * (21 - 7) + 7;
+            setTimeout(() => {
+                let footstep = new Audio('audio/footsteps.ogg');
+                footstep.play().catch(e => console.error('Footstep failed:', e));
+                scheduleFootsteps();
+            }, delay * 1000);
+        }
+
+        function scheduleSiren() {
+            let delay = Math.random() * (42 - 21) + 21;
+            setTimeout(() => {
+                let siren = new Audio('audio/siren.ogg');
+                siren.play().catch(e => console.error('Siren failed:', e));
+                scheduleSiren();
+            }, delay * 1000);
+        }
+
+        main();
+    </script>
+</body>
+</html>
