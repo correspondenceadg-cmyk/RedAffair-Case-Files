@@ -30,9 +30,10 @@ from kivy.animation import Animation
 from kivy.core.audio import SoundLoader
 
 try:
-    from src.redaffair.workshop.ui.screen import WorkshopScreen
+    from src.redaffair.workshop.ui.screen import WorkshopScreen, FlavorEditorScreen
 except ImportError:
     WorkshopScreen = None
+    FlavorEditorScreen = None
 
 try:
     from src.redaffair.case.registry import CASE_SELECT_ENTRIES
@@ -292,7 +293,7 @@ class SplashScreen(Screen):
 
         self.title_box = RelativeLayout(size_hint=(None, None),
                                         pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        title_text = 'RED AFFAIR'
+        title_text = 'RED AFFAIR: CASE FILES'
         title_font_size = '36sp'
         self.title_labels = []
         offsets = [(-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1)]
@@ -599,7 +600,6 @@ class CaseSelectScreen(Screen):
         case_layout.bind(minimum_height=case_layout.setter('height'))
 
         for case_id, entry in CASE_SELECT_ENTRIES.items():
-            # TODO: Add paper.png as background texture
             btn = Button(
                 text=entry.get("display_name", case_id),
                 font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
@@ -1504,6 +1504,8 @@ class RootWidget(FloatLayout):
         self.sm.add_widget(SoundTestScreen(name='soundtest'))
         if WorkshopScreen:
             self.sm.add_widget(WorkshopScreen(name='workshop'))
+        if FlavorEditorScreen:
+            self.sm.add_widget(FlavorEditorScreen(name='flavoredit'))
         self.sm.current = 'splash'
         self.add_widget(self.sm)
 

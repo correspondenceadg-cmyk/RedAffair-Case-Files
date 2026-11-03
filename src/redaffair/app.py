@@ -58,9 +58,10 @@ except Exception as e:
     raise
 
 try:
-    from .workshop.ui.screen import WorkshopScreen
+    from .workshop.ui.screen import WorkshopScreen, FlavorEditorScreen
 except ImportError:
     WorkshopScreen = None
+    FlavorEditorScreen = None
 
 try:
     from .case.registry import CASE_SELECT_ENTRIES
@@ -612,7 +613,6 @@ class CaseSelectScreen(Screen):
         case_layout.bind(minimum_height=case_layout.setter('height'))
 
         for case_id, entry in CASE_SELECT_ENTRIES.items():
-            # TODO: Add paper.png as background texture
             btn = Button(
                 text=entry.get("display_name", case_id),
                 font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
@@ -1517,6 +1517,8 @@ class RootWidget(FloatLayout):
         self.sm.add_widget(SoundTestScreen(name='soundtest'))
         if WorkshopScreen:
             self.sm.add_widget(WorkshopScreen(name='workshop'))
+        if FlavorEditorScreen:
+            self.sm.add_widget(FlavorEditorScreen(name='flavoredit'))
         self.sm.current = 'splash'
         self.add_widget(self.sm)
 
