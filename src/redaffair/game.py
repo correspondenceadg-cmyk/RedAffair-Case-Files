@@ -4,6 +4,8 @@ sfx_queue = None
 cheat_unlimited_cuffs = False
 cheat_god_mode = False
 cheat_infinite_countenance = False
+active_case_id = "classic"
+active_seed = 0
 
 def play_game():
     RED = '\033[31m'
@@ -80,7 +82,8 @@ def play_game():
     except ImportError:
         from case_loader import load_case_for_play
 
-    case = load_case_for_play("classic")
+    case_to_load = globals().get('active_case_id', 'classic')
+    case = load_case_for_play(case_to_load)
 
     # ---------- Political Leanings ----------
     lean_pool = ["communist"]*2 + ["fascist"]*2 + ["liberal"]*2 + ["anarchist"]*2
@@ -1209,7 +1212,6 @@ def play_game():
             ev_id = available_evidence[int(choice)-1]
             impl, exon = EVIDENCE_IMPLICATION.get(ev_id, ([], []))
 
-            # expr -> check if suspect name or killer key matches
             implicates_sus = any(imp.lower() in s['name'].lower() for imp in impl) or (sus == case.killer_key and "Unknown" in impl)
             exonerates_sus = any(ex.lower() in s['name'].lower() for ex in exon)
 

@@ -29,6 +29,16 @@ from kivy.graphics.texture import Texture
 from kivy.animation import Animation
 from kivy.core.audio import SoundLoader
 
+try:
+    from src.redaffair.workshop.ui.screen import WorkshopScreen
+except ImportError:
+    WorkshopScreen = None
+
+try:
+    from src.redaffair.case.registry import CASE_SELECT_ENTRIES
+except ImportError:
+    CASE_SELECT_ENTRIES = {"classic": {"display_name": "The Red Affair"}}
+
 LOG_FILE = '/sdcard/redaffair_crash.log'
 
 def log_crash(exc_text):
@@ -282,7 +292,7 @@ class SplashScreen(Screen):
 
         self.title_box = RelativeLayout(size_hint=(None, None),
                                         pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        title_text = 'RED AFFAIR: CASE FILES'
+        title_text = 'RED AFFAIR'
         title_font_size = '36sp'
         self.title_labels = []
         offsets = [(-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1)]
@@ -395,10 +405,12 @@ class GameStdin:
         return self.readline()
 
 class GameUI(BoxLayout):
-    def __init__(self, theme, back_callback, **kwargs):
+    def __init__(self, theme, back_callback, case_id="classic", seed=0, **kwargs):
         super().__init__(**kwargs, orientation='vertical')
         self.theme = theme
         self.back_callback = back_callback
+        self.case_id = case_id
+        self.seed = seed
         with self.canvas.before:
             Color(*theme['bg'])
             self.bg_rect = Rectangle(size=self.size, pos=self.pos)
@@ -439,6 +451,8 @@ class GameUI(BoxLayout):
         self.scroll.add_widget(self.output_label)
         self.add_widget(self.scroll)
 
+        input_layout = BoxLayout(orientation='vertical', size_hint=(1, 0.1))
+        
         self.input_box = TextInput(
             hint_text='Type command…',
             font_name=font_to_use,
@@ -446,12 +460,23 @@ class GameUI(BoxLayout):
             foreground_color=fg_color,
             background_color=theme['input_bg'],
             cursor_color=theme['cursor'],
-            size_hint=(1, 0.1),
+            size_hint=(1, 0.7),
             multiline=False,
             padding=[10, 15, 10, 10]
         )
         self.input_box.bind(on_text_validate=self.send_input)
-        self.add_widget(self.input_box)
+        input_layout.add_widget(self.input_box)
+        
+        self.seed_label = Label(
+            text=f"Seed: {self.seed} | Case: {self.case_id}",
+            font_name=font_to_use,
+            font_size='10sp',
+            color=(0.5, 0.5, 0.5, 1),
+            size_hint=(1, 0.3)
+        )
+        input_layout.add_widget(self.seed_label)
+        
+        self.add_widget(input_layout)
 
         self.back_button = Button(
             text='Back to Menu',
@@ -487,6 +512,8 @@ class GameUI(BoxLayout):
         game.cheat_unlimited_cuffs = app.cheat_unlimited_cuffs
         game.cheat_god_mode = app.cheat_god_mode
         game.cheat_infinite_countenance = app.cheat_infinite_countenance
+        game.active_case_id = self.case_id
+        game.active_seed = self.seed
         self.game_thread = threading.Thread(target=self._run_game, daemon=True)
         self.game_thread.start()
 
@@ -548,6 +575,73 @@ class GameUI(BoxLayout):
     def _go_back(self, instance):
         self.back_callback()
 
+class CaseSelectScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        layout = BoxLayout(orientation='vertical', padding=50, spacing=20)
+        with self.canvas.before:
+            Color(0, 0, 0, 1)
+            self.bg_rect = Rectangle(size=self.size, pos=self.pos)
+        self.bind(size=self._update_bg, pos=self._update_bg)
+
+        header = Label(
+            text='SELECT CASE',
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_size='30sp',
+            color=(1, 0, 0, 1),
+            size_hint=(1, None),
+            height=80
+        )
+        layout.add_widget(header)
+        
+        scroll = ScrollView(size_hint=(1, 1), do_scroll_x=False)
+        case_layout = BoxLayout(orientation='vertical', spacing=15, size_hint_y=None)
+        case_layout.bind(minimum_height=case_layout.setter('height'))
+
+        for case_id, entry in CASE_SELECT_ENTRIES.items():
+            # TODO: Add paper.png as background texture
+            btn = Button(
+                text=entry.get("display_name", case_id),
+                font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+                font_size='24sp',
+                background_color=(0.96, 0.93, 0.86, 1),
+                color=(0, 0, 0, 1),
+                size_hint=(1, None),
+                height=120
+            )
+            btn.bind(on_press=lambda x, cid=case_id: self.start_case(cid))
+            case_layout.add_widget(btn)
+
+        scroll.add_widget(case_layout)
+        layout.add_widget(scroll)
+
+        back_btn = Button(
+            text='Back',
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_size='24sp',
+            background_color=(0.2, 0, 0, 1),
+            color=(1, 1, 1, 1),
+            size_hint=(1, None),
+            height=100
+        )
+        back_btn.bind(on_press=self.go_back)
+        layout.add_widget(back_btn)
+
+        self.add_widget(layout)
+
+    def _update_bg(self, instance, value):
+        self.bg_rect.size = instance.size
+        self.bg_rect.pos = instance.pos
+
+    def start_case(self, case_id):
+        app = App.get_running_app()
+        game_screen = self.manager.get_screen('game')
+        game_screen.set_case(case_id)
+        self.manager.current = 'game'
+
+    def go_back(self, instance):
+        self.manager.current = 'menu'
+
 class MenuScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -574,8 +668,19 @@ class MenuScreen(Screen):
             color=(1, 1, 1, 1),
             size_hint=(1, 1)
         )
-        start_btn.bind(on_press=self.start_game)
+        start_btn.bind(on_press=self.open_case_select)
         layout.add_widget(start_btn)
+
+        if WorkshopScreen:
+            workshop_btn = Button(
+                text='Workshop',
+                font_size='30sp',
+                background_color=(0.2, 0, 0, 1),
+                color=(1, 1, 1, 1),
+                size_hint=(1, 1)
+            )
+            workshop_btn.bind(on_press=self.open_workshop)
+            layout.add_widget(workshop_btn)
 
         settings_btn = Button(
             text='Settings',
@@ -617,8 +722,11 @@ class MenuScreen(Screen):
             if self.title_taps >= 5:
                 self.manager.current = 'cheats'
 
-    def start_game(self, instance):
-        self.manager.current = 'game'
+    def open_case_select(self, instance):
+        self.manager.current = 'caseselect'
+
+    def open_workshop(self, instance):
+        self.manager.current = 'workshop'
 
     def open_settings(self, instance):
         self.manager.current = 'settings'
@@ -670,7 +778,7 @@ class AboutScreen(Screen):
         from kivy.uix.boxlayout import BoxLayout
         content = BoxLayout(orientation='vertical', padding=10)
         label = Label(
-            text="Red Affair: Case Files is a neo-noir game inspired by Zork and Disco Elysium style games. It has been a longtime dream of mine to make something exactly like this, and now that I'm fully transitioning into tech as a career, I thought it would be the best first use of my skills and abilities. This game is free to play, own, and distribute. Anyone charging money for it(not that they would, I mean, why would they?) is scamming you or lying to you in some way. If you want, you can reach out to me through any of the links provided in the donate menu or through the Linkedin or Github links embedded into the game. I will be happy to give the game for free quickly and without resistance.\n\nThe main point of this game is to give myself a portfolio for potential employers to look at. It's something that demonstrates an understanding of python, UI design, and game design. Everything was done entirely by me or using open-source files or otherwise free-use licensed files. I wrote the lines of dialogue, code, and narration.\n\nI hope you like it.",
+            text="Red Affair is a neo-noir game inspired by Zork and Disco Elysium style games. It has been a longtime dream of mine to make something exactly like this, and now that I'm fully transitioning into tech as a career, I thought it would be the best first use of my skills and abilities. This game is free to play, own, and distribute. Anyone charging money for it(not that they would, I mean, why would they?) is scamming you or lying to you in some way. If you want, you can reach out to me through any of the links provided in the donate menu or through the Linkedin or Github links embedded into the game. I will be happy to give the game for free quickly and without resistance.\n\nThe main point of this game is to give myself a portfolio for potential employers to look at. It's something that demonstrates an understanding of python, UI design, and game design. Everything was done entirely by me or using open-source files or otherwise free-use licensed files. I wrote the lines of dialogue, code, and narration.\n\nI hope you like it.",
             font_size='18sp',
             color=(1,0,0,1),
             size_hint_y=None,
@@ -721,7 +829,7 @@ class DonateScreen(Screen):
         self.bind(size=self._update_bg, pos=self._update_bg)
 
         label = Label(
-            text='Support Red Affair: Case Files',
+            text='Support Red Affair',
             font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
             font_size='28sp',
             color=(1, 0, 0, 1),
@@ -1181,11 +1289,19 @@ class GameScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.game_ui = None
+        self.case_id = "classic"
+        self.seed = 0
+
+    def set_case(self, case_id):
+        self.case_id = case_id
+        self.game_ui = None
+        for child in self.children[:]:
+            self.remove_widget(child)
 
     def on_enter(self):
         if not self.game_ui:
             app = App.get_running_app()
-            self.game_ui = GameUI(theme=app.current_theme, back_callback=self.go_menu)
+            self.game_ui = GameUI(theme=app.current_theme, back_callback=self.go_menu, case_id=self.case_id, seed=self.seed)
             self.add_widget(self.game_ui)
         self.start_game()
 
@@ -1378,6 +1494,7 @@ class RootWidget(FloatLayout):
         self.sm = ScreenManager(transition=FadeTransition(duration=0.5))
         self.sm.add_widget(SplashScreen(name='splash'))
         self.sm.add_widget(MenuScreen(name='menu'))
+        self.sm.add_widget(CaseSelectScreen(name='caseselect'))
         self.sm.add_widget(AboutScreen(name='about'))
         self.sm.add_widget(DonateScreen(name='donate'))
         self.sm.add_widget(GameScreen(name='game'))
@@ -1385,6 +1502,8 @@ class RootWidget(FloatLayout):
         self.sm.add_widget(PaletteScreen(name='palette'))
         self.sm.add_widget(CheatsScreen(name='cheats'))
         self.sm.add_widget(SoundTestScreen(name='soundtest'))
+        if WorkshopScreen:
+            self.sm.add_widget(WorkshopScreen(name='workshop'))
         self.sm.current = 'splash'
         self.add_widget(self.sm)
 
