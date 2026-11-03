@@ -75,8 +75,6 @@ def play_game():
     RESERVED_KEY_THX1138 = "thatcher"
 
     # ---------- Case Loading ----------
-    import sys
-    import os
     try:
         from .case_loader import load_case_for_play
     except ImportError:
@@ -147,6 +145,7 @@ def play_game():
     nyx_escape_offered = False
     nyx_escaped = False
     corruption_planted = None
+    tainted_evidence = False
     talk_history = {}
     countenance_used = False
 
@@ -502,9 +501,6 @@ def play_game():
         if not s["alive"] or s["defeated"]:
             print("They're beyond conversation. The void has claimed their attention.")
             return
-        if s["detained"]:
-            print("The cuffs have a way of making people uncooperative.")
-            return
         if s["hostile"]:
             print(f"{get_first_name(s['name'])} fixes you with a stare that could curdle deuterium. No conversation today.")
             return
@@ -515,6 +511,11 @@ def play_game():
 
         print(f"\n{RED}You approach {get_first_name(s['name'])}. The air shifts.{RESET}")
         print(f"Trust: {trust[sus]}/3 | Lean: {s['lean']}")
+        
+        if s["detained"]:
+            print("The cuffs have a way of making people uncooperative. Trust can only go down from here.")
+            trust[sus] = max(0, trust[sus] - 1)
+
         if trust[sus] == 3 and revealed_characteristic[sus] not in traits_revealed:
             reveal_characteristic(sus)
 
@@ -806,13 +807,19 @@ def play_game():
         if not s["alive"] or s["defeated"]:
             print("Already on the floor. Kicking them now is excessive.")
             return
-        if s["detained"]:
-            print("Cuffed and harmless. What are you, a bully?")
-            return
         loc_suspects = locations[current_location].get("suspects", [])
         if sus not in loc_suspects:
             print("Shadowboxing. Very existential. Very pointless.")
             return
+            
+        if s["detained"]:
+            print("You raise your weapon against a restrained suspect. They cannot fight back. It takes two hits.")
+            print(f"{get_first_name(s['name'])} is dead. This is a cold-blooded execution.")
+            s["hp"] = 0
+            s["defeated"] = True
+            check_total_carnage()
+            return
+
         curse = random.choice(s["curses"]) if s["curses"] else ""
         print(f"\n{RED}⚔ The air is electric. You and {get_first_name(s['name'])} circle the area like binary stars on a collision course. There may yet be another murder. At least it'll be easy to solve.{RESET}")
         if sfx_queue: sfx_queue.put('fight')
@@ -871,7 +878,7 @@ def play_game():
 
     # ---------- Tamper / Plant ----------
     def tamper(item, suspect=None):
-        nonlocal corruption_planted
+        nonlocal corruption_planted, tainted_evidence
         ev_id = EVIDENCE_ALIASES.get(item.lower())
         if ev_id is None:
             if item in EVIDENCE_DESCRIPTIONS:
@@ -900,6 +907,19 @@ def play_game():
             if not resolved:
                 print("Invalid suspect.")
                 return
+                
+            if resolved == RESERVED_KEY_THX1138:
+                current_hits = len(clues.intersection(incriminating))
+                if current_hits >= required_incriminating:
+                    print("The evidence is already sufficient. This won't change anything.")
+                else:
+                    print("You plant the evidence. It provides the missing link.")
+                    tainted_evidence = True
+                    clues.add(ev_id)
+            else:
+                corruption_planted = resolved
+                print(msg.format(suspect=get_first_name(suspects[resolved]['name'])))
+
             if ev_id == "unknown_revolver" and "revolver" in inventory:
                 inventory.remove("revolver")
             elif ev_id == "bullet_casing" and "bullet_casing" not in inventory:
@@ -908,12 +928,10 @@ def play_game():
             elif ev_id == "bloody_cleaver" and "bloody_cleaver" not in inventory:
                 print("You don't have the cleaver.")
                 return
-            corruption_planted = resolved
-            print(msg.format(suspect=get_first_name(suspects[resolved]['name'])))
-
+                
     # ---------- Accuse ----------
     def accuse(sus):
-        nonlocal handcuffs, corruption_planted
+        nonlocal handcuffs, corruption_planted, tainted_evidence
         if not sus:
             print("Accuse who? Make up your mind, detective.")
             return
@@ -937,10 +955,7 @@ def play_game():
             suspects[sus]["hostile"] = True
 
         if sus == "cook" and not suspects["cook"]["exonerated"] and not suspects["cook"]["detained"] and not suspects["cook"]["defeated"]:
-            print("Adeline's eyes widen. 'You think it was me? No, no, no...' She bolts for the back door!")
-            print("She escapes into the void before you can react. The case just got harder.")
-            suspects["cook"]["alive"] = False
-            suspects["cook"]["escaped"] = True
+            ending_escape()
             return
         if nyx_escaped and corruption_planted and sus == corruption_planted:
             corruption_ending()
@@ -955,8 +970,12 @@ def play_game():
             print(f"{get_first_name(suspects[RESERVED_KEY_THX1138]['name'])} smirks. 'Let's say I did. Who in Existence would believe you? You've got nothing on me.'")
             return
         if suspects[RESERVED_KEY_THX1138]["detained"]:
-            ending_correct()
+            if tainted_evidence:
+                ending_correct_tainted()
+            else:
+                ending_correct()
             return
+            
         print(f"\nYou point at {get_first_name(suspects[RESERVED_KEY_THX1138]['name'])}. 'You.' The word hangs like a bullet; slipping behind their eyes and through their mental folds as the realization dawns on them. You're pointing at them, and you're not backing down.")
         print(f"You both notice at the same time: they're unrestrained. '{player_name}, you absolute fool!' They lunge.")
         fight(RESERVED_KEY_THX1138)
@@ -969,11 +988,16 @@ def play_game():
                 print(f"You slap the cuffs on {get_first_name(suspects[RESERVED_KEY_THX1138]['name'])}. {rem} remaining. Justice never tasted so bloody and sweet. Good job, detective. They're sure to tell stories of this one at the station.")
             else:
                 print("You don't have any cuffs left, but they're out cold. The police drone will handle it. Probably. You light a smoke and watch over them making sure they're still breathing ready to issue another state-sanctioned beat-down if necessary.")
-            ending_correct()
+            if tainted_evidence:
+                ending_correct_tainted()
+            else:
+                ending_correct()
         elif suspects[RESERVED_KEY_THX1138]["defeated"] and suspects[RESERVED_KEY_THX1138]["detained"]:
-            ending_correct()
+            if tainted_evidence:
+                ending_correct_tainted()
+            else:
+                ending_correct()
         else:
-            print("They slip your grasp and bolt out the door like greased lightning. The airlock cycles. By the time you reach it, they're a silhouette against the stars. You'll never catch up to them, and may never find them again. It's a 24 carat run of bad luck, or maybe just bad decision making gilded with pyrite excuses.")
             ending_fail()
 
     # ---------- Endings ----------
@@ -985,7 +1009,7 @@ def play_game():
         print(f"'Did you really think these standard restraints could hold me?' They smile. The predator turns prey, but it dawns on you they're damn good at being either.")
         print(f"'Entertaining, {player_name}. Truly. But I have a schedule to keep, and you have a new problem to explain.'")
         print("They're gone before you can move. The airlock cycles. Moments later the police drone arrives to an empty office and a restaurant full of fools. Too bad, detective. They'll definitely tell this story although you'd certainly wish they wouldn't.")
-        print(f"\n{RED}GAME OVER{RESET}")
+        print(f"\n{RED}GAME OVER – SECRET ENDING{RESET}")
         game_over = True
         sys.exit(0)
 
@@ -1013,6 +1037,15 @@ def play_game():
         game_over = True
         sys.exit(0)
 
+    def ending_escape():
+        nonlocal game_over
+        if sfx_queue: sfx_queue.put('gameover')
+        print("Adeline's eyes widen. 'You think it was me? No, no, no...' She bolts for the back door!")
+        print("She escapes into the void before you can react. The case just got harder.")
+        print(f"{RED}GAME OVER – ESCAPE ENDING{RESET}")
+        game_over = True
+        sys.exit(0)
+
     def ending_correct():
         nonlocal game_over
         if sfx_queue: sfx_queue.put('victory')
@@ -1033,6 +1066,21 @@ def play_game():
         else:
             print(f"You watch as the drone explores a bit looking for the regulation attachment and finding nothing. It instead spouts forth a telescoping flexible tentacle that wraps around their wrist. It generates an ionic iso-field around their unconscious body, and takes off to the station only a nano-parsec away, give or take. You feel a sense of fullness in your heart, and it's not cholesterol. Good, job, {player_name}.")
         print(f"\n{RED}Game Over.{RESET}")
+        game_over = True
+        sys.exit(0)
+
+    def ending_correct_tainted():
+        nonlocal game_over
+        if sfx_queue: sfx_queue.put('victory')
+        k = suspects[RESERVED_KEY_THX1138]
+        print(f"\n{RED}You force the pieces to fit.{RESET}")
+        print(f"You point at {get_first_name(k['name'])}. 'You.'")
+        print(f"{get_first_name(k['name'])} sneers. 'You've got nothing, detective.'")
+        print("You present the evidence. It's enough. Barely. The police drone accepts your report.")
+        print("The conviction holds. For now.")
+        print("\nWeeks later, the appeal goes through. The fabricated evidence is discovered. The conviction is vacated. You are stripped of your license, facing charges of evidence tampering.")
+        print(f"But {get_first_name(k['name'])} is off the streets. The crooked design is broken, even if you broke yourself doing it.")
+        print(f"\n{RED}GAME OVER – TAINTED ENDING{RESET}")
         game_over = True
         sys.exit(0)
 
@@ -1122,25 +1170,10 @@ def play_game():
         if sus not in suspects:
             print("Unknown suspect for theory.")
             return
+        
         s = suspects[sus]
         name = get_first_name(s['name'])
-        print(f"{name}.")
-        if sus in MOTIVE_GOSSIP:
-            target, gossip_text, _ = MOTIVE_GOSSIP[sus]
-            print(f"Known motives: {s['motive']} (Also: {gossip_text})")
-        else:
-            print(f"Known motives: {s['motive']}")
-        evidence_for = []
-        evidence_against = []
-        for ev_id in clues:
-            if ev_id in EVIDENCE_IMPLICATION:
-                impl, exon = EVIDENCE_IMPLICATION[ev_id]
-                if name in impl:
-                    evidence_for.append(evidence_display_name(ev_id))
-                if name in exon:
-                    evidence_against.append(evidence_display_name(ev_id))
-        print(f"Evidence for {name}: {', '.join(evidence_for) if evidence_for else 'none'}")
-        print(f"Evidence against {name}: {', '.join(evidence_against) if evidence_against else 'none'}")
+        
         alibi_map = {
             "marcus": "aiden_alibi",
             "napoleon": "blake_alibi",
@@ -1150,13 +1183,47 @@ def play_game():
             "patron": "hemlock_missing",
             RESERVED_KEY_THX1138: None
         }
-        alibi_id = alibi_map.get(sus)
-        if alibi_id and alibi_id in clues and not is_misleading(alibi_id):
-            print("Alibi: Yes")
-        elif alibi_id is None:
-            print("Alibi: None presented")
-        else:
-            print("Alibi: No")
+
+        print(f"\n{RED}THEORY SCRATCHPAD: {name}{RESET}")
+        print(f"Known motives: {s['motive']}")
+
+        while True:
+            print("\nSelect evidence to evaluate:")
+            available_evidence = sorted(list(clues))
+            
+            if not available_evidence:
+                print("You have no evidence to evaluate.")
+                break
+                
+            for i, ev_id in enumerate(available_evidence, 1):
+                print(f"{i}. {evidence_display_name(ev_id)}")
+            print("0. Exit theory board")
+
+            choice = input("> ").strip()
+            if choice == "0":
+                break
+            if not choice.isdigit() or not (1 <= int(choice) <= len(available_evidence)):
+                print("Invalid selection.")
+                continue
+
+            ev_id = available_evidence[int(choice)-1]
+            impl, exon = EVIDENCE_IMPLICATION.get(ev_id, ([], []))
+
+            # expr -> check if suspect name or killer key matches
+            implicates_sus = any(imp.lower() in s['name'].lower() for imp in impl) or (sus == case.killer_key and "Unknown" in impl)
+            exonerates_sus = any(ex.lower() in s['name'].lower() for ex in exon)
+
+            if implicates_sus:
+                print(f"• {evidence_display_name(ev_id)} -> DECISIVE: This connects strongly to {name}.")
+            elif exonerates_sus:
+                print(f"• {evidence_display_name(ev_id)} -> CONTRADICTS: This points away from {name}.")
+            else:
+                print(f"• {evidence_display_name(ev_id)} -> CONSISTENT: This doesn't rule {name} in or out.")
+
+            if alibi_map.get(sus) == ev_id:
+                print("(Note: Alibis can be faked or misinterpreted. This alone is not proof.)")
+
+        print(f"\nYou close the file on {name}. The pieces don't form a complete picture yet.")
 
     # ---------- Shortcuts & Command Parsing ----------
     EASTER_EGG_PHRASE = "Im an existentialist-absurdist-gnostic-agnostic-secular-true path unitarian-marxist-leninist-maoist multi-level marketer."
