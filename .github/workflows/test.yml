@@ -1,0 +1,19 @@
+name: Test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        python-version: "3.13"
+    - name: Install deps
+      run: uv sync --dev
+    - name: Byte identity check
+      run: |
+        diff game.py src/redaffair/game.py && echo "game files identical"
+        diff case_loader.py src/redaffair/case_loader.py && echo "loader files identical"
+    - name: Run pytest
+      run: uv run pytest tests/
