@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Any, Optional
 
 @dataclass
@@ -67,6 +67,54 @@ class Case:
     location_set: str = ""
     cast_universe: str = ""
     seed: int = 0
+
+    def to_dict(self) -> dict:
+        d = asdict(self)
+        d["incriminating"] = list(self.incriminating)
+        d["MOTIVE_GOSSIP"] = {k: list(v) for k, v in self.MOTIVE_GOSSIP.items()}
+        d["EVIDENCE_IMPLICATION"] = {k: list(v) for k, v in self.EVIDENCE_IMPLICATION.items()}
+        d["TAMPER_ACTIONS"] = {k: list(v) for k, v in self.TAMPER_ACTIONS.items()}
+        d["schema_version"] = 1
+        return d
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Case":
+        d = dict(d)
+        if "schema_version" in d:
+            del d["schema_version"]
+        suspects = {k: Suspect(**v) for k, v in d.get("suspects", {}).items()}
+        locations = {k: Location(**v) for k, v in d.get("locations", {}).items()}
+        incriminating = set(d.get("incriminating", []))
+        mg = {k: tuple(v) for k, v in d.get("MOTIVE_GOSSIP", {}).items()}
+        ei = {k: tuple(v) for k, v in d.get("EVIDENCE_IMPLICATION", {}).items()}
+        ta = {k: tuple(v) for k, v in d.get("TAMPER_ACTIONS", {}).items()}
+        
+        return cls(
+            case_id=d.get("case_id", ""),
+            title=d.get("title", ""),
+            suspects=suspects,
+            locations=locations,
+            suspect_descriptions=d.get("suspect_descriptions", {}),
+            suspect_aliases=d.get("suspect_aliases", {}),
+            revealed_characteristic=d.get("revealed_characteristic", {}),
+            MISLEADING_CLUES=d.get("MISLEADING_CLUES", {}),
+            MISLEADING_DIALOGUE=d.get("MISLEADING_DIALOGUE", {}),
+            MOTIVE_GOSSIP=mg,
+            CONFRONT_DIALOGUE=d.get("CONFRONT_DIALOGUE", {}),
+            ADELINE_ESCAPE_REACTIONS=d.get("ADELINE_ESCAPE_REACTIONS", {}),
+            EVIDENCE_DESCRIPTIONS=d.get("EVIDENCE_DESCRIPTIONS", {}),
+            EVIDENCE_IMPLICATION=ei,
+            EVIDENCE_ALIASES=d.get("EVIDENCE_ALIASES", {}),
+            EVIDENCE_VERIFY=d.get("EVIDENCE_VERIFY", {}),
+            TAMPER_ACTIONS=ta,
+            incriminating=incriminating,
+            required_incriminating=d.get("required_incriminating", 3),
+            killer_key=d.get("killer_key", ""),
+            player_lean=d.get("player_lean", ""),
+            location_set=d.get("location_set", ""),
+            cast_universe=d.get("cast_universe", ""),
+            seed=d.get("seed", 0)
+        )
 
 def load_case(case_id: str) -> Case:
     from .classic import get_classic_data

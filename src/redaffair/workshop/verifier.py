@@ -1,4 +1,9 @@
+import json
+import re
+import os
+import time
 from .sat import solve
+from ..case import Case, assert_all_invariants
 
 # convictable(case, "thatcher") -> True
 def convictable(case, suspect_key):
@@ -44,3 +49,55 @@ def verify_all(case):
         "convictable": convicts,
         "killer": case.killer_key
     }
+
+def _check_templates(data):
+    if isinstance(data, dict):
+        for k, v in data.items():
+            if isinstance(k, str) and "[FLAVOR:" in k:
+                return False
+            if not _check_templates(v): return False
+    elif isinstance(data, list):
+        for v in data:
+            if not _check_templates(v): return False
+    elif isinstance(data, str):
+        if "[FLAVOR:" in data:
+            return False
+    return True
+
+# validate_import("{}") -> (False, "Gate 1 Failed (JSON parse)")
+def validate_import(json_str):
+    try:
+        data = json.loads(json_str)
+    except Exception as e:
+        return False, f"Gate 1 Failed (JSON parse): {e}"
+
+    if data.get("schema_version") != 1:
+        return False, "Gate 2 Failed (Schema version mismatch)"
+
+    try:
+        case = Case.from_dict(data)
+    except Exception as e:
+        return False, f"Gate 1 Failed (from_dict): {e}"
+
+    try:
+        assert_all_invariants(case)
+    except Exception as e:
+        return False, f"Gate 3 Failed (Invariants): {e}"
+
+    if not verify_unique_bruteforce(case):
+        return False, "Gate 4 Failed (Bruteforce uniqueness)"
+
+    if not verify_unique_sat(case):
+        return False, "Gate 5 Failed (SAT uniqueness)"
+
+    if not _check_templates(data):
+        return False, "Gate 6 Failed (Template completeness)"
+
+    return True, "Import successful"
+
+def save_failed_import(json_str):
+    os.makedirs("imports", exist_ok=True)
+    path = f"imports/failed_{int(time.time())}.json"
+    with open(path, "w") as f:
+        f.write(json_str)
+    return path
