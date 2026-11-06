@@ -362,7 +362,7 @@ wheels = [
 
 [[package]]
 name = "redaffair-case-files"
-version = "0.1.14"
+version = "0.1.15"
 source = { editable = "." }
 dependencies = [
     { name = "charset-normalizer" },
