@@ -29,25 +29,43 @@ from kivy.graphics.texture import Texture
 from kivy.animation import Animation
 from kivy.core.audio import SoundLoader
 
+Window.clearcolor = (0, 0, 0, 1)
+
 try:
-    from src.redaffair.workshop.ui.screen import WorkshopScreen, FlavorEditorScreen
+    from src.redaffair.workshop.ui.screen import WorkshopScreen, FlavorEditorScreen, ImportScreen
 except ImportError:
     WorkshopScreen = None
     FlavorEditorScreen = None
+    ImportScreen = None
 
 try:
     from src.redaffair.case.registry import CASE_SELECT_ENTRIES
 except ImportError:
     CASE_SELECT_ENTRIES = {"classic": {"display_name": "The Red Affair"}}
 
-LOG_FILE = '/sdcard/redaffair_crash.log'
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def log_path():
+    try:
+        from jnius import autoclass
+        PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        context = PythonActivity.mActivity.getApplicationContext()
+        external_dir = context.getExternalFilesDir(None)
+        if external_dir:
+            return os.path.join(external_dir.getAbsolutePath(), 'redaffair_crash.log')
+    except Exception:
+        pass
+    return os.path.join(APP_DIR, 'redaffair_crash.log')
 
 def log_crash(exc_text):
     try:
-        with open(LOG_FILE, 'w') as f:
+        path = log_path()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w') as f:
             f.write(exc_text)
     except:
         pass
+    print(f"\n--- CRASH LOG ---\n{exc_text}\n-----------------\n")
 
 try:
     import game
@@ -55,8 +73,9 @@ except Exception as e:
     log_crash(f"Failed to import game.py:\n{traceback.format_exc()}")
     raise
 
-FONT_PATH = 'fonts/DepartureMono.ttf'
-FONT_PATH_DYSLEXIC = 'fonts/OpenDyslexic-Regular.otf'
+FONT_PATH = os.path.join(APP_DIR, 'fonts', 'DepartureMono.ttf')
+FONT_PATH_DYSLEXIC = os.path.join(APP_DIR, 'fonts', 'OpenDyslexic-Regular.otf')
+FONT_PATH_LOGO = os.path.join(APP_DIR, 'fonts', 'thirdman.ttf')
 
 DARK_THEME = {
     'fg': (1, 0, 0, 1),
@@ -286,7 +305,7 @@ class SplashScreen(Screen):
             self.bg_rect = Rectangle(size=self.size, pos=self.pos)
         self.layout.bind(size=self._update_bg_rect, pos=self._update_bg_rect)
 
-        self.bg_image = Image(source='assets/splash_bg.png',
+        self.bg_image = Image(source=os.path.join(APP_DIR, 'assets', 'splash_bg.png'),
                               allow_stretch=True, keep_ratio=False,
                               size_hint=(1, 1), pos_hint={'x': 0, 'y': 0})
         self.layout.add_widget(self.bg_image)
@@ -299,7 +318,7 @@ class SplashScreen(Screen):
         offsets = [(-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1)]
         for dx, dy in offsets:
             lbl = Label(text=title_text,
-                        font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+                        font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else None,
                         font_size=title_font_size,
                         color=(1, 1, 1, 1),
                         halign='center', valign='middle',
@@ -309,7 +328,7 @@ class SplashScreen(Screen):
             self.title_box.add_widget(lbl)
             self.title_labels.append(lbl)
         self.red_title = Label(text=title_text,
-                               font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+                               font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else None,
                                font_size=title_font_size,
                                color=(1, 0, 0, 1),
                                halign='center', valign='middle',
@@ -325,7 +344,7 @@ class SplashScreen(Screen):
         self.spinner_scatter = Scatter(do_rotation=False, do_scale=False, do_translation=False,
                                        size_hint=(None, None), size=(64, 64),
                                        pos_hint={'center_x': 0.5, 'center_y': 0.3})
-        self.spinner_image = Image(source='assets/spinner.png',
+        self.spinner_image = Image(source=os.path.join(APP_DIR, 'assets', 'spinner.png'),
                                    size=(64, 64), size_hint=(None, None))
         self.spinner_scatter.add_widget(self.spinner_image)
         self.layout.add_widget(self.spinner_scatter)
@@ -653,7 +672,7 @@ class MenuScreen(Screen):
 
         self.title_label = Label(
             text='RED AFFAIR: CASE FILES',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else None,
             font_size='36sp',
             color=(1, 0, 0, 1),
             size_hint=(1, 0.35)
@@ -798,7 +817,7 @@ class AboutScreen(Screen):
         from kivy.uix.boxlayout import BoxLayout
         content = BoxLayout(orientation='vertical', padding=10)
         label = Label(
-            text="SiliCast Games is a single-member independent developer project that is seeking to reinvigorate and reintroduce classic styles of games from a bygone era. Everything used in the games is either open-source, common use, or made entirely by hand. At no point is money ever requested for the download, use, or distribution of this game, the files therein, or the identity of the studio. For questions and comments, check the github and linkedin buttons or email me at\n\ncorrespondenceadg@gmail.com\n\nSpecial Thanks: Filipe Marchesini for helping me migrate to ksproject",
+            text="SiliCast Games is a single-member independent developer project that is seeking to reinvigorate and reintroduce classic styles of games from a bygone era. Everything used in the games is either open-source, common use, or made entirely by hand. At no point is money ever requested for the download, use, or distribution of this game, the files therein, or the identity of the studio. For questions and comments, check the github and linkedin buttons or email me at\n\ncorrespondenceadg@gmail.com",
             font_size='18sp',
             color=(1,0,0,1),
             size_hint_y=None,
@@ -1013,7 +1032,7 @@ class SettingsScreen(Screen):
             value_track_color=(1, 0, 0, 1),
             value_track_width=6,
             background_width=3,
-            cursor_image='assets/slider.png',
+            cursor_image=os.path.join(APP_DIR, 'assets', 'slider.png'),
             cursor_size=(0, 0)
         )
         self.volume_slider.bind(value=self.on_volume_change)
@@ -1216,7 +1235,7 @@ class PaletteScreen(Screen):
         self.add_widget(self.scroll)
 
     def _build_section(self, title, key):
-        box = BoxLayout(orientation='vertical', spacing=15, size_hint_y=None, height=210)
+        box = BoxLayout(orientation='vertical', spacing=5, size_hint_y=None, height=180)
         lbl = Label(text=title, font_size='18sp', color=(1,1,1,1), size_hint_y=None, height=30)
         box.add_widget(lbl)
         r_slider = Slider(min=0, max=1, value=1, size_hint_y=None, height=40)
@@ -1506,6 +1525,8 @@ class RootWidget(FloatLayout):
             self.sm.add_widget(WorkshopScreen(name='workshop'))
         if FlavorEditorScreen:
             self.sm.add_widget(FlavorEditorScreen(name='flavoredit'))
+        if ImportScreen:
+            self.sm.add_widget(ImportScreen(name='import'))
         self.sm.current = 'splash'
         self.add_widget(self.sm)
 

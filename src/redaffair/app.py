@@ -30,6 +30,8 @@ from kivy.graphics.texture import Texture
 from kivy.animation import Animation
 from kivy.core.audio import SoundLoader
 
+Window.clearcolor = (0, 0, 0, 1)
+
 APP_DIR = Path(__file__).resolve().parent
 
 
@@ -38,6 +40,15 @@ def asset_path(relative_path):
 
 
 def log_path():
+    try:
+        from jnius import autoclass
+        PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        context = PythonActivity.mActivity.getApplicationContext()
+        external_dir = context.getExternalFilesDir(None)
+        if external_dir:
+            return os.path.join(external_dir.getAbsolutePath(), 'redaffair_crash.log')
+    except Exception:
+        pass
     app = App.get_running_app()
     if app is not None:
         return os.path.join(app.user_data_dir, 'redaffair_crash.log')
@@ -46,10 +57,13 @@ def log_path():
 
 def log_crash(exc_text):
     try:
-        with open(log_path(), 'w') as f:
+        path = log_path()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w') as f:
             f.write(exc_text)
     except:
         pass
+    print(f"\n--- CRASH LOG ---\n{exc_text}\n-----------------\n")
 
 try:
     from . import game
