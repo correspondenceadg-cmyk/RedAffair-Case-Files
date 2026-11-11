@@ -40,7 +40,7 @@ jobs:
     - name: Nuclear cache wipe and rebuild
       run: |
         rm -rf .venv project_dist/gradle ~/.cache/uv
-        uv sync --dev
+        uv sync --dev --locked
     - name: Build APK
       run: uv run ksproject android build debug --clean
     - name: Upload APK

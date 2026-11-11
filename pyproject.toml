@@ -1,6 +1,6 @@
 [project]
 name = "redaffair-case-files"
-version = "0.1.19"
+version = "0.1.20"
 description = "A text-based adventure and detective game written in Python"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -33,12 +33,12 @@ redaffair = [
 pythonpath = ["."]
 
 [tool.uv.sources]
-ksp-bootstraps = { git = "https://github.com/kivy-school/ksp-bootstraps", branch = "master" }
+ksp-bootstraps = { git = "https://github.com/kivy-school/ksp-bootstraps", rev = "93952f708a5e1e28e7649bb008def41c99946d96" }
 
 [dependency-groups]
 dev = [
     "ksp-bootstraps",
-    "ksproject",
+    "ksproject==0.0.1.post0",
     "pytest",
 ]
 
@@ -55,8 +55,8 @@ bootstrap = "kivy"
 
 [tool.kivy-school.android]
 package_name = "ws.tilda.sentryprotocol.redaffaircasefiles"
-version_name = "0.1.19"
-version_code = 119
+version_name = "0.1.20"
+version_code = 120
 icon = "RAlogos.png"
 presplash = "presplash.png"
 presplash_color = "#e40909"

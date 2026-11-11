@@ -233,24 +233,24 @@ wheels = [
 
 [[package]]
 name = "ksp-bootstraps"
-version = "0.0.3"
-source = { git = "https://github.com/kivy-school/ksp-bootstraps?branch=master#9b16bee543f87c40ea9a4af67abe347ce880c2d7" }
+version = "0.0.2"
+source = { git = "https://github.com/kivy-school/ksp-bootstraps?rev=93952f708a5e1e28e7649bb008def41c99946d96#93952f708a5e1e28e7649bb008def41c99946d96" }
 dependencies = [
     { name = "pyyaml" },
 ]
 
 [[package]]
 name = "ksproject"
-version = "0.0.3"
+version = "0.0.1.post0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ksp-bootstraps" },
     { name = "pyyaml" },
     { name = "toml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/0a/263b515cc9135cbc47698a5e9db1b4923c7e6e49611b7cc709cf4f022765/ksproject-0.0.3.tar.gz", hash = "sha256:11e9a4f5fb33adae915d028d59e485f98df7412e20844b575520e081aba9c71a", size = 110622, upload-time = "2026-09-01T10:00:59.79Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fa/ee/56eb1089399c6ea2c1a3183cdf000a5aa960049a7e4ed937493be6680571/ksproject-0.0.1.post0.tar.gz", hash = "sha256:0cf9589ca949af0933426a491312dfaed94a5677e65fe826b71ff34fbe489693", size = 108610, upload-time = "2026-07-12T17:27:47.267Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/c7/21e7eb05571e2fcd0064fd367557ef5b47cfb84ab56b052ff36efb603dd5/ksproject-0.0.3-py3-none-any.whl", hash = "sha256:39216aa66f70d30591b69e05a67ed2e2242c93321d9eb1dd91a5fcaceb57ad7f", size = 121779, upload-time = "2026-09-01T10:00:58.543Z" },
+    { url = "https://files.pythonhosted.org/packages/a5/7e/a75d2a4d387a0c803e7fd5a2c7e44dea096a8362d282cc5a1fce57be5c5d/ksproject-0.0.1.post0-py3-none-any.whl", hash = "sha256:ff1ce49f893d18e18cb83d7674887b11ef8edf0e711506ced43774705b0fc48d", size = 119466, upload-time = "2026-07-12T17:27:46.052Z" },
 ]
 
 [[package]]
@@ -362,7 +362,7 @@ wheels = [
 
 [[package]]
 name = "redaffair-case-files"
-version = "0.1.19"
+version = "0.1.20"
 source = { editable = "." }
 dependencies = [
     { name = "charset-normalizer" },
@@ -379,13 +379,13 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "charset-normalizer" },
-    { name = "kivy", specifier = ">=2.3.1,<3.0.0" },
+    { name = "kivy", specifier = "==2.3.1" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "ksp-bootstraps", git = "https://github.com/kivy-school/ksp-bootstraps?branch=master" },
-    { name = "ksproject" },
+    { name = "ksp-bootstraps", git = "https://github.com/kivy-school/ksp-bootstraps?rev=93952f708a5e1e28e7649bb008def41c99946d96" },
+    { name = "ksproject", specifier = "==0.0.1.post0" },
     { name = "pytest" },
 ]
 
