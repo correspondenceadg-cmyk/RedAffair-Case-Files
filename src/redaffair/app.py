@@ -58,10 +58,11 @@ except Exception as e:
     raise
 
 try:
-    from .workshop.ui.screen import WorkshopScreen, FlavorEditorScreen
+    from .workshop.ui.screen import WorkshopScreen, FlavorEditorScreen, ImportScreen
 except ImportError:
     WorkshopScreen = None
     FlavorEditorScreen = None
+    ImportScreen = None
 
 try:
     from .case.registry import CASE_SELECT_ENTRIES
@@ -70,6 +71,7 @@ except ImportError:
 
 FONT_PATH = asset_path('fonts/DepartureMono.ttf')
 FONT_PATH_DYSLEXIC = asset_path('fonts/OpenDyslexicAlta-Regular.otf')
+FONT_PATH_LOGO = asset_path('fonts/thirdman.ttf')
 
 DARK_THEME = {
     'fg': (1, 0, 0, 1),
@@ -312,7 +314,7 @@ class SplashScreen(Screen):
         offsets = [(-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1)]
         for dx, dy in offsets:
             lbl = Label(text=title_text,
-                        font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+                        font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else None,
                         font_size=title_font_size,
                         color=(1, 1, 1, 1),
                         halign='center', valign='middle',
@@ -322,7 +324,7 @@ class SplashScreen(Screen):
             self.title_box.add_widget(lbl)
             self.title_labels.append(lbl)
         self.red_title = Label(text=title_text,
-                               font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+                               font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else None,
                                font_size=title_font_size,
                                color=(1, 0, 0, 1),
                                halign='center', valign='middle',
@@ -666,7 +668,7 @@ class MenuScreen(Screen):
 
         self.title_label = Label(
             text='RED AFFAIR: CASE FILES',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else None,
             font_size='36sp',
             color=(1, 0, 0, 1),
             size_hint=(1, 0.35)
@@ -1519,6 +1521,8 @@ class RootWidget(FloatLayout):
             self.sm.add_widget(WorkshopScreen(name='workshop'))
         if FlavorEditorScreen:
             self.sm.add_widget(FlavorEditorScreen(name='flavoredit'))
+        if ImportScreen:
+            self.sm.add_widget(ImportScreen(name='import'))
         self.sm.current = 'splash'
         self.add_widget(self.sm)
 
