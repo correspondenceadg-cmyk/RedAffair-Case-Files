@@ -55,6 +55,12 @@ def log_path():
             return os.path.join(external_dir.getAbsolutePath(), 'redaffair_crash.log')
     except Exception:
         pass
+    try:
+        home_dir = os.path.expanduser('~')
+        if os.access(home_dir, os.W_OK):
+            return os.path.join(home_dir, 'redaffair_crash.log')
+    except Exception:
+        pass
     return os.path.join(APP_DIR, 'redaffair_crash.log')
 
 def log_crash(exc_text):
@@ -439,7 +445,7 @@ class GameUI(BoxLayout):
             self._init_ui()
         except Exception:
             log_crash(traceback.format_exc())
-            self.add_widget(Label(text=f"FATAL ERROR\n{LOG_FILE}"))
+            self.add_widget(Label(text=f"FATAL ERROR\n{log_path()}"))
 
     def _update_bg(self, instance, value):
         self.bg_rect.size = instance.size
@@ -1574,7 +1580,13 @@ class RedAffairApp(App):
 
     def build(self):
         self.sfx_manager = SFXManager(self)
-        self.root_widget = RootWidget()
+        try:
+            self.root_widget = RootWidget()
+        except Exception as e:
+            err = traceback.format_exc()
+            log_crash(err)
+            self.root_widget = FloatLayout()
+            self.root_widget.add_widget(Label(text=f"FATAL ERROR\n{err}", font_size='12sp', halign='center', valign='middle', text_size=(Window.width - 40, None)))
         Clock.schedule_once(lambda dt: self.start_music(), 1)
         Clock.schedule_once(lambda dt: self.start_ambient(), 2)
         return self.root_widget
@@ -1595,14 +1607,16 @@ class RedAffairApp(App):
                 if self.music_enabled:
                     self.music_sound.play()
                 log_crash("Music started playing")
-                settings_screen = self.root_widget.sm.get_screen('settings')
-                if settings_screen:
-                    settings_screen._update_track_label()
+                if hasattr(self.root_widget, 'sm'):
+                    settings_screen = self.root_widget.sm.get_screen('settings')
+                    if settings_screen:
+                        settings_screen._update_track_label()
             else:
                 log_crash(f"Failed to load music: {path}")
-                settings_screen = self.root_widget.sm.get_screen('settings')
-                if settings_screen:
-                    settings_screen.track_label.text = f"Error loading {path}"
+                if hasattr(self.root_widget, 'sm'):
+                    settings_screen = self.root_widget.sm.get_screen('settings')
+                    if settings_screen:
+                        settings_screen.track_label.text = f"Error loading {path}"
         except Exception as e:
             log_crash(f"Music error: {traceback.format_exc()}")
 
@@ -1624,19 +1638,21 @@ class RedAffairApp(App):
         self.music_enabled = True
         if self.music_sound:
             self.music_sound.play()
-        settings_screen = self.root_widget.sm.get_screen('settings')
-        if settings_screen:
-            settings_screen.volume_slider.disabled = False
-            settings_screen._update_track_label()
+        if hasattr(self.root_widget, 'sm'):
+            settings_screen = self.root_widget.sm.get_screen('settings')
+            if settings_screen:
+                settings_screen.volume_slider.disabled = False
+                settings_screen._update_track_label()
 
     def disable_music(self):
         self.music_enabled = False
         if self.music_sound:
             self.music_sound.stop()
-        settings_screen = self.root_widget.sm.get_screen('settings')
-        if settings_screen:
-            settings_screen.volume_slider.disabled = True
-            settings_screen._update_track_label()
+        if hasattr(self.root_widget, 'sm'):
+            settings_screen = self.root_widget.sm.get_screen('settings')
+            if settings_screen:
+                settings_screen.volume_slider.disabled = True
+                settings_screen._update_track_label()
 
     def start_ambient(self):
         try:
