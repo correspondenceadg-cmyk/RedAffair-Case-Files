@@ -49,10 +49,9 @@ jobs:
         ln -sf $ANDROID_HOME/ndk/28.0.12433566 /home/runner/.buildozer/android/platform/android-ndk-r28c
     - name: Sync dependencies
       run: uv sync --dev
-    - name: Patch ksproject python version and URLs
+    - name: Patch ksproject URLs
       run: |
         find .venv -name "*.py" -exec sed -i 's/pypi\.kivyschool\.com/pypi.anaconda.org\/kivyschool/g' {} +
-        find .venv -name "*.py" -exec sed -i 's/3\.14\.6/3.13.0/g' {} +
     - name: Build APK
       env:
         UV_PYTHON: 3.13.0
