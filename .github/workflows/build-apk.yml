@@ -46,10 +46,8 @@ jobs:
         yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
         $ANDROID_HOME/tools/bin/sdkmanager "ndk;28.0.12433566"
         ln -sf $ANDROID_HOME/ndk/28.0.12433566 /home/runner/.buildozer/android/platform/android-ndk-r28c
-    - name: Nuclear cache wipe and rebuild
-      run: |
-        rm -rf .venv project_dist/gradle ~/.cache/uv
-        uv sync --dev --locked
+    - name: Sync dependencies
+      run: uv sync --dev
     - name: Build APK
       env:
         UV_PYTHON: 3.13
