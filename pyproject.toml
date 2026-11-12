@@ -1,6 +1,6 @@
 [project]
 name = "redaffair-case-files"
-version = "0.2.5"
+version = "0.2.6"
 description = "A text-based adventure and detective game written in Python"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
@@ -53,11 +53,12 @@ extra-index-url = [
 [tool.kivy-school]
 app_name = "Red Affair - Case Files"
 bootstrap = "kivy"
+python_version = "3.13"
 
 [tool.kivy-school.android]
 package_name = "ws.tilda.sentryprotocol.redaffaircasefiles"
-version_name = "0.2.5"
-version_code = 205
+version_name = "0.2.6"
+version_code = 206
 icon = "RAlogos.png"
 presplash = "presplash.png"
 presplash_color = "#000000"
