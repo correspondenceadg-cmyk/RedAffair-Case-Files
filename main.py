@@ -43,8 +43,6 @@ try:
 except ImportError:
     CASE_SELECT_ENTRIES = {"classic": {"display_name": "The Red Affair"}}
 
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-
 def log_path():
     try:
         from jnius import autoclass
@@ -55,18 +53,11 @@ def log_path():
             return os.path.join(external_dir.getAbsolutePath(), 'redaffair_crash.log')
     except Exception:
         pass
-    try:
-        home_dir = os.path.expanduser('~')
-        if os.access(home_dir, os.W_OK):
-            return os.path.join(home_dir, 'redaffair_crash.log')
-    except Exception:
-        pass
-    return os.path.join(APP_DIR, 'redaffair_crash.log')
+    return 'redaffair_crash.log'
 
 def log_crash(exc_text):
     try:
         path = log_path()
-        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w') as f:
             f.write(exc_text)
     except:
@@ -79,9 +70,9 @@ except Exception as e:
     log_crash(f"Failed to import game.py:\n{traceback.format_exc()}")
     raise
 
-FONT_PATH = os.path.join(APP_DIR, 'fonts', 'DepartureMono.ttf')
-FONT_PATH_DYSLEXIC = os.path.join(APP_DIR, 'fonts', 'OpenDyslexic-Regular.otf')
-FONT_PATH_LOGO = os.path.join(APP_DIR, 'fonts', 'thirdman.ttf')
+FONT_PATH = 'fonts/DepartureMono.ttf'
+FONT_PATH_DYSLEXIC = 'fonts/OpenDyslexic-Regular.otf'
+FONT_PATH_LOGO = 'fonts/thirdman.ttf'
 
 DARK_THEME = {
     'fg': (1, 0, 0, 1),
@@ -311,7 +302,7 @@ class SplashScreen(Screen):
             self.bg_rect = Rectangle(size=self.size, pos=self.pos)
         self.layout.bind(size=self._update_bg_rect, pos=self._update_bg_rect)
 
-        self.bg_image = Image(source=os.path.join(APP_DIR, 'assets', 'splash_bg.png'),
+        self.bg_image = Image(source='assets/splash_bg.png',
                               allow_stretch=True, keep_ratio=False,
                               size_hint=(1, 1), pos_hint={'x': 0, 'y': 0})
         self.layout.add_widget(self.bg_image)
@@ -350,7 +341,7 @@ class SplashScreen(Screen):
         self.spinner_scatter = Scatter(do_rotation=False, do_scale=False, do_translation=False,
                                        size_hint=(None, None), size=(64, 64),
                                        pos_hint={'center_x': 0.5, 'center_y': 0.3})
-        self.spinner_image = Image(source=os.path.join(APP_DIR, 'assets', 'spinner.png'),
+        self.spinner_image = Image(source='assets/spinner.png',
                                    size=(64, 64), size_hint=(None, None))
         self.spinner_scatter.add_widget(self.spinner_image)
         self.layout.add_widget(self.spinner_scatter)
@@ -1038,7 +1029,7 @@ class SettingsScreen(Screen):
             value_track_color=(1, 0, 0, 1),
             value_track_width=6,
             background_width=3,
-            cursor_image=os.path.join(APP_DIR, 'assets', 'slider.png'),
+            cursor_image='assets/slider.png',
             cursor_size=(0, 0)
         )
         self.volume_slider.bind(value=self.on_volume_change)
