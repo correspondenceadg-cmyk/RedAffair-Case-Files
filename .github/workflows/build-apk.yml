@@ -22,6 +22,11 @@ jobs:
       uses: astral-sh/setup-uv@v6
       with:
         python-version: "3.13"
+    - name: Cache Android Debug Keystore
+      uses: actions/cache@v4
+      with:
+        path: ~/.android
+        key: android-debug-keystore-${{ runner.os }}
     - name: Install system deps
       run: |
         sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
@@ -46,6 +51,8 @@ jobs:
         rm -rf .venv project_dist/gradle ~/.cache/uv
         uv sync --dev --locked
     - name: Build APK
+      env:
+        UV_PYTHON: 3.13
       run: uv run ksproject android build debug --clean
     - name: Rename APK
       run: |
