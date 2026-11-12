@@ -21,7 +21,7 @@ jobs:
     - name: Setup uv
       uses: astral-sh/setup-uv@v6
       with:
-        python-version: "3.13"
+        python-version: "3.13.0"
     - name: Generate Debug Keystore
       run: |
         mkdir -p ~/.android
@@ -49,12 +49,13 @@ jobs:
         ln -sf $ANDROID_HOME/ndk/28.0.12433566 /home/runner/.buildozer/android/platform/android-ndk-r28c
     - name: Sync dependencies
       run: uv sync --dev
-    - name: Patch ksproject URLs
+    - name: Patch ksproject python version and URLs
       run: |
         find .venv -name "*.py" -exec sed -i 's/pypi\.kivyschool\.com/pypi.anaconda.org\/kivyschool/g' {} +
+        find .venv -name "*.py" -exec sed -i 's/3\.14\.6/3.13.0/g' {} +
     - name: Build APK
       env:
-        UV_PYTHON: 3.13
+        UV_PYTHON: 3.13.0
       run: uv run ksproject android build debug --clean
     - name: Rename APK
       run: |
