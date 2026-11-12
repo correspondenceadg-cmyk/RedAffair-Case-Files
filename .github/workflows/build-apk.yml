@@ -49,14 +49,6 @@ jobs:
         ln -sf $ANDROID_HOME/ndk/28.0.12433566 /home/runner/.buildozer/android/platform/android-ndk-r28c
     - name: Sync dependencies
       run: uv sync --dev
-    - name: Force prebuilt libpython for Android
-      run: |
-        mkdir -p project_dist/gradle/app/src/main/jniLibs/arm64-v8a
-        wget -q https://pypi.anaconda.org/kivyschool/simple/libpython/libpython-3.13.0-0-py3-none-android_24_arm64_v8a.whl -O libpython.whl || true
-        if [ -f libpython.whl ]; then
-          unzip -o -q libpython.whl -d libpython_extracted
-          cp -r libpython_extracted/libpython_android/* project_dist/gradle/app/src/main/jniLibs/arm64-v8a/ || true
-        fi
     - name: Build APK
       env:
         UV_PYTHON: 3.13
