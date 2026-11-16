@@ -49,6 +49,7 @@ android {
     sourceSets {
         getByName("main") {
             assets.srcDir(layout.buildDirectory.dir("generated/python_assets").get().asFile)
+            jniLibs.srcDir(layout.buildDirectory.dir("generated/duplicateJniLibs"))
         }
     }
 
@@ -67,22 +68,19 @@ dependencies {
 {{ extra_deps }}
 }
 
-val duplicateLibpythonArm64 by tasks.registering(Copy::class) {
-    mustRunAfter("copySitePackagesNativeLibs_arm64-v8a")
-    from("src/main/jniLibs/arm64-v8a") { include("libpython3.so") }
-    into("src/main/jniLibs/arm64-v8a")
-    rename { "libpython3.13.so" }
-}
+val copySiteNativeTasks = tasks.matching { it.name.startsWith("copySitePackagesNativeLibs_") }
 
-val duplicateLibpythonX86 by tasks.registering(Copy::class) {
-    mustRunAfter("copySitePackagesNativeLibs_x86_64")
-    from("src/main/jniLibs/x86_64") { include("libpython3.so") }
-    into("src/main/jniLibs/x86_64")
-    rename { "libpython3.13.so" }
+val duplicateLibpython by tasks.registering(Copy::class) {
+    dependsOn(copySiteNativeTasks)
+    from("src/main/jniLibs") {
+        include("*/libpython3.so")
+        rename { "libpython3.13.so" }
+    }
+    into(layout.buildDirectory.dir("generated/duplicateJniLibs"))
 }
 
 tasks.matching { it.name.startsWith("merge") && it.name.endsWith("NativeLibs") }.configureEach {
-    dependsOn(duplicateLibpythonArm64, duplicateLibpythonX86)
+    dependsOn(duplicateLibpython)
 }
 
 {{ site_packages_tasks }}
