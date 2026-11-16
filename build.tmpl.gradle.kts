@@ -68,12 +68,14 @@ dependencies {
 }
 
 val duplicateLibpythonArm64 by tasks.registering(Copy::class) {
+    mustRunAfter("copySitePackagesNativeLibs_arm64-v8a")
     from("src/main/jniLibs/arm64-v8a") { include("libpython3.so") }
     into("src/main/jniLibs/arm64-v8a")
     rename { "libpython3.13.so" }
 }
 
 val duplicateLibpythonX86 by tasks.registering(Copy::class) {
+    mustRunAfter("copySitePackagesNativeLibs_x86_64")
     from("src/main/jniLibs/x86_64") { include("libpython3.so") }
     into("src/main/jniLibs/x86_64")
     rename { "libpython3.13.so" }
