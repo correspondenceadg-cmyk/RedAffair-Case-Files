@@ -22,6 +22,12 @@ jobs:
       uses: astral-sh/setup-uv@v6
       with:
         python-version: "3.13.8"
+    - name: Cache Android Debug Keystore
+      uses: actions/cache@v4
+      id: android-cache
+      with:
+        path: ~/.android
+        key: android-debug-keystore-v1
     - name: Generate Debug Keystore
       run: |
         mkdir -p ~/.android
@@ -47,21 +53,15 @@ jobs:
         yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
         $ANDROID_HOME/tools/bin/sdkmanager "ndk;28.0.12433566"
         ln -sf $ANDROID_HOME/ndk/28.0.12433566 /home/runner/.buildozer/android/platform/android-ndk-r28c
-    - name: Install dev tools (bypass project resolution)
-      run: |
-        uv venv --python 3.13.8
-        uv pip install --python .venv/bin/python "ksp-bootstraps @ git+https://github.com/kivy-school/ksp-bootstraps@93952f708a5e1e28e7649bb008def41c99946d96" "ksproject==0.0.1.post0" pytest
+    - name: Sync dependencies
+      run: uv sync --dev
     - name: Patch ksproject URLs
       run: |
         find .venv -name "*.py" -exec sed -i 's/pypi\.kivyschool\.com/pypi.anaconda.org\/kivyschool/g' {} +
-    - name: Verify ksproject version
-      run: |
-        .venv/bin/python -c "import ksproject; print('ksproject version:', getattr(ksproject, '__version__', 'unknown'))"
-        .venv/bin/python -c "import ksproject_utils; print('ksproject_utils:', ksproject_utils.__file__)"
     - name: Build APK
       env:
         UV_PYTHON: 3.13.8
-      run: .venv/bin/ksproject android build debug --clean
+      run: uv run ksproject android build debug --clean
     - name: Rename APK
       run: |
         mv project_dist/gradle/app/build/outputs/apk/debug/*.apk project_dist/gradle/app/build/outputs/apk/debug/RACF.apk

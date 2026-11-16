@@ -20,20 +20,11 @@ android {
                 arguments += listOf("-DANDROID_STL=c++_static")
             }
         }
-
-        // ONESIGNAL_APP_ID setup for pyonesignal (reads from env and creates a string resource)
-        val oneSignalId = System.getenv("ONESIGNAL_APP_ID") ?: ""
-        resValue("string", "onesignal_app_id", oneSignalId)
     }
 
     packaging {
         jniLibs {
             useLegacyPackaging = true
-            // excludes += setOf(
-            //     "**/libcrypto.so",
-            //     "**/libssl.so",
-            //     "**/libsqlite3.so"
-            // )
         }
     }
 
@@ -61,9 +52,6 @@ android {
         }
     }
 
-    // CPython stdlib and packages contain underscore-prefixed directories
-    // (e.g. zipfile/_path) that AGP's default aapt ignore pattern strips.
-    // Override to keep them.
     androidResources {
         ignoreAssetsPatterns.clear()
         ignoreAssetsPatterns.addAll(listOf(
