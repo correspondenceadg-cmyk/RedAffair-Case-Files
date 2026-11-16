@@ -48,7 +48,7 @@ jobs:
         $ANDROID_HOME/tools/bin/sdkmanager "ndk;28.0.12433566"
         ln -sf $ANDROID_HOME/ndk/28.0.12433566 /home/runner/.buildozer/android/platform/android-ndk-r28c
     - name: Sync dependencies
-      run: uv sync --dev
+      run: uv sync --dev --no-install-package kivy
     - name: Patch ksproject URLs
       run: |
         find .venv -name "*.py" -exec sed -i 's/pypi\.kivyschool\.com/pypi.anaconda.org\/kivyschool/g' {} +
