@@ -21,7 +21,7 @@ jobs:
     - name: Setup uv
       uses: astral-sh/setup-uv@v6
       with:
-        python-version: "3.13.0"
+        python-version: "3.14.6"
     - name: Generate Debug Keystore
       run: |
         mkdir -p ~/.android
@@ -54,7 +54,7 @@ jobs:
         find .venv -name "*.py" -exec sed -i 's/pypi\.kivyschool\.com/pypi.anaconda.org\/kivyschool/g' {} +
     - name: Build APK
       env:
-        UV_PYTHON: 3.13.0
+        UV_PYTHON: 3.14.6
       run: uv run ksproject android build debug --clean
     - name: Rename APK
       run: |
