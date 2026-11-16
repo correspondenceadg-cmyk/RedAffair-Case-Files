@@ -67,4 +67,20 @@ dependencies {
 {{ extra_deps }}
 }
 
+tasks.whenTaskAdded {
+    if (name.startsWith("merge") && name.endsWith("NativeLibs")) {
+        doFirst {
+            val abis = listOf("arm64-v8a", "x86_64")
+            for (abi in abis) {
+                val src = file("src/main/jniLibs/$abi/libpython3.so")
+                val dst = file("src/main/jniLibs/$abi/libpython3.13.so")
+                if (src.exists() && !dst.exists()) {
+                    dst.writeBytes(src.readBytes())
+                    println("Duplicated libpython3.so -> libpython3.13.so for $abi")
+                }
+            }
+        }
+    }
+}
+
 {{ site_packages_tasks }}

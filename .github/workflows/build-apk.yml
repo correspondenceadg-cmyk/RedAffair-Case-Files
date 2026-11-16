@@ -63,39 +63,11 @@ jobs:
       env:
         UV_PYTHON: 3.13
       run: .venv/bin/ksproject android build debug --clean
-    - name: Inspect APK native libraries (ELF details)
+    - name: Verify libpython alias in APK
       run: |
         APK=$(find project_dist/gradle/app/build/outputs/apk/debug -name "*.apk" | head -1)
         echo "=== APK: $APK ==="
-        rm -rf /tmp/apk_extract
-        mkdir -p /tmp/apk_extract
-        unzip -q "$APK" -d /tmp/apk_extract
-        echo ""
-        echo "=== ELF LOAD segment p_align (page sizes) ==="
-        for so in /tmp/apk_extract/lib/arm64-v8a/*.so; do
-          if [ -f "$so" ]; then
-            echo "--- $(basename $so) ---"
-            readelf -lW "$so" 2>/dev/null | awk '/LOAD/ {print $1, $2, $3, $NF}'
-          fi
-        done
-        echo ""
-        echo "=== DT_NEEDED dependencies ==="
-        for so in /tmp/apk_extract/lib/arm64-v8a/*.so; do
-          if [ -f "$so" ]; then
-            echo "--- $(basename $so) ---"
-            readelf -dW "$so" 2>/dev/null | grep NEEDED || echo "  (no NEEDED)"
-          fi
-        done
-        echo ""
-        echo "=== Unresolved DT_NEEDED for libpython3.so ==="
-        LIBPY_DEPS=$(readelf -dW /tmp/apk_extract/lib/arm64-v8a/libpython3.so 2>/dev/null | awk '/NEEDED/ {gsub(/\[|\]/, "", $NF); print $NF}')
-        for dep in $LIBPY_DEPS; do
-          if [ -f "/tmp/apk_extract/lib/arm64-v8a/$dep" ]; then
-            echo "  OK: $dep"
-          else
-            echo "  MISSING: $dep"
-          fi
-        done
+        unzip -l "$APK" | grep "lib/arm64-v8a/libpython" || echo "NONE"
     - name: Rename APK
       run: |
         mv project_dist/gradle/app/build/outputs/apk/debug/*.apk project_dist/gradle/app/build/outputs/apk/debug/RACF.apk
