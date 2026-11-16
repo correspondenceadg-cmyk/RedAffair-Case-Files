@@ -50,7 +50,7 @@ jobs:
     - name: Install dev tools (bypass project resolution)
       run: |
         uv venv --python 3.14.6
-        uv pip install --python .venv/bin/python ksp-bootstraps ksproject==0.0.1.post0 pytest
+        uv pip install --python .venv/bin/python ksp-bootstraps ksproject pytest
     - name: Patch ksproject URLs
       run: |
         find .venv -name "*.py" -exec sed -i 's/pypi\.kivyschool\.com/pypi.anaconda.org\/kivyschool/g' {} +
