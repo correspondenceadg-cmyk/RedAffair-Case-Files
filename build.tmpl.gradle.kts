@@ -67,20 +67,20 @@ dependencies {
 {{ extra_deps }}
 }
 
-tasks.whenTaskAdded {
-    if (name.startsWith("merge") && name.endsWith("NativeLibs")) {
-        doFirst {
-            val abis = listOf("arm64-v8a", "x86_64")
-            for (abi in abis) {
-                val src = file("src/main/jniLibs/$abi/libpython3.so")
-                val dst = file("src/main/jniLibs/$abi/libpython3.13.so")
-                if (src.exists() && !dst.exists()) {
-                    dst.writeBytes(src.readBytes())
-                    println("Duplicated libpython3.so -> libpython3.13.so for $abi")
-                }
-            }
-        }
-    }
+val duplicateLibpythonArm64 by tasks.registering(Copy::class) {
+    from("src/main/jniLibs/arm64-v8a") { include("libpython3.so") }
+    into("src/main/jniLibs/arm64-v8a")
+    rename { "libpython3.13.so" }
+}
+
+val duplicateLibpythonX86 by tasks.registering(Copy::class) {
+    from("src/main/jniLibs/x86_64") { include("libpython3.so") }
+    into("src/main/jniLibs/x86_64")
+    rename { "libpython3.13.so" }
+}
+
+tasks.matching { it.name.startsWith("merge") && it.name.endsWith("NativeLibs") }.configureEach {
+    dependsOn(duplicateLibpythonArm64, duplicateLibpythonX86)
 }
 
 {{ site_packages_tasks }}
