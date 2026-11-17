@@ -79,7 +79,9 @@ val duplicateLibpython by tasks.registering(Copy::class) {
     into(layout.buildDirectory.dir("generated/duplicateJniLibs"))
 }
 
-tasks.matching { it.name.startsWith("merge") && it.name.endsWith("NativeLibs") }.configureEach {
+tasks.matching {
+    it.name.startsWith("merge") && (it.name.endsWith("NativeLibs") || it.name.endsWith("JniLibFolders"))
+}.configureEach {
     dependsOn(duplicateLibpython)
 }
 
