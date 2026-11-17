@@ -22,6 +22,11 @@ jobs:
       uses: astral-sh/setup-uv@v6
       with:
         python-version: "3.13"
+    - name: Disable Gradle configuration cache
+      run: |
+        mkdir -p ~/.gradle
+        echo "org.gradle.configuration-cache=false" >> ~/.gradle/gradle.properties
+        echo "org.gradle.configuration-cache.problems=warn" >> ~/.gradle/gradle.properties
     - name: Cache Android Debug Keystore
       uses: actions/cache@v4
       with:
@@ -69,16 +74,23 @@ jobs:
         set -e
         echo "ksproject exit: $KS_EXIT"
         APK=$(find project_dist/gradle/app/build/outputs/apk/debug -name "*.apk" 2>/dev/null | head -1)
-        if [ -n "$APK" ]; then
-          echo "APK produced at: $APK (tolerating non-zero gradle exit from config-cache warning)"
-        else
-          echo "No APK produced"
+        if [ -z "$APK" ]; then
+          echo "FATAL: No APK produced"
           exit 1
         fi
-    - name: Verify libpython alias in APK
+        echo "APK produced at: $APK"
+    - name: Verify libpython3.13 alias in APK
       run: |
         APK=$(find project_dist/gradle/app/build/outputs/apk/debug -name "*.apk" | head -1)
-        unzip -l "$APK" | grep "lib/arm64-v8a/libpython" || echo "NONE"
+        echo "=== lib/arm64-v8a contents ==="
+        unzip -l "$APK" | grep "lib/arm64-v8a/" || true
+        echo ""
+        if unzip -l "$APK" | grep -q "lib/arm64-v8a/libpython3.13.so"; then
+          echo "OK: libpython3.13.so present"
+        else
+          echo "FATAL: libpython3.13.so MISSING from APK — the alias task didn't run or didn't merge. Refusing to upload broken APK."
+          exit 1
+        fi
     - name: Rename APK
       run: |
         APK=$(find project_dist/gradle/app/build/outputs/apk/debug -name "*.apk" | head -1)
