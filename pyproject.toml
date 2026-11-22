@@ -1,6 +1,6 @@
 [project]
 name = "redaffair-case-files"
-version = "0.3.21"
+version = "0.3.22"
 description = "A text-based adventure and detective game written in Python"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -18,7 +18,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["redaffair*"]
+include = ["redaffair*", "redaffair_case_files*"]
 
 [tool.setuptools.package-data]
 redaffair = [
@@ -57,8 +57,8 @@ python_version = "3.13.8"
 
 [tool.kivy-school.android]
 package_name = "ws.tilda.sentryprotocol.redaffaircasefiles"
-version_name = "0.3.21"
-version_code = 321
+version_name = "0.3.22"
+version_code = 322
 icon = "RAlogos.png"
 presplash = "presplash.png"
 presplash_color = "#000000"
