@@ -328,7 +328,7 @@ class SplashScreen(Screen):
         offsets = [(-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1)]
         for dx, dy in offsets:
             lbl = Label(text=title_text,
-                        font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else None,
+                        font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else 'Roboto',
                         font_size=title_font_size,
                         color=(1, 1, 1, 1),
                         halign='center', valign='middle',
@@ -338,7 +338,7 @@ class SplashScreen(Screen):
             self.title_box.add_widget(lbl)
             self.title_labels.append(lbl)
         self.red_title = Label(text=title_text,
-                               font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else None,
+                               font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else 'Roboto',
                                font_size=title_font_size,
                                color=(1, 0, 0, 1),
                                halign='center', valign='middle',
@@ -360,7 +360,7 @@ class SplashScreen(Screen):
         self.layout.add_widget(self.spinner_scatter)
 
         self.copyright_label = Label(text='SiliCast Games © 2026',
-                                     font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+                                     font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
                                      font_size='11sp', color=(1, 0, 0, 1),
                                      size_hint=(None, None),
                                      pos_hint={'center_x': 0.5, 'y': 0.04})
@@ -457,7 +457,7 @@ class GameUI(BoxLayout):
 
     def _init_ui(self):
         app = App.get_running_app()
-        font_to_use = FONT_PATH_DYSLEXIC if (app.use_dyslexic_font and os.path.exists(FONT_PATH_DYSLEXIC)) else FONT_PATH if os.path.exists(FONT_PATH) else None
+        font_to_use = FONT_PATH_DYSLEXIC if (app.use_dyslexic_font and os.path.exists(FONT_PATH_DYSLEXIC)) else FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto'
         theme = self.theme
         fg_color = theme['fg']
         if app.custom_palette_enabled:
@@ -616,7 +616,7 @@ class CaseSelectScreen(Screen):
 
         header = Label(
             text='SELECT CASE',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='30sp',
             color=(1, 0, 0, 1),
             size_hint=(1, None),
@@ -631,7 +631,7 @@ class CaseSelectScreen(Screen):
         for case_id, entry in CASE_SELECT_ENTRIES.items():
             btn = Button(
                 text=entry.get("display_name", case_id),
-                font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+                font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
                 font_size='24sp',
                 background_color=(0.96, 0.93, 0.86, 1),
                 color=(0, 0, 0, 1),
@@ -646,7 +646,7 @@ class CaseSelectScreen(Screen):
 
         back_btn = Button(
             text='Back',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='24sp',
             background_color=(0.2, 0, 0, 1),
             color=(1, 1, 1, 1),
@@ -682,7 +682,7 @@ class MenuScreen(Screen):
 
         self.title_label = Label(
             text='RED AFFAIR: CASE FILES',
-            font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else None,
+            font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else 'Roboto',
             font_size='36sp',
             color=(1, 0, 0, 1),
             size_hint=(1, 0.35)
@@ -859,7 +859,7 @@ class DonateScreen(Screen):
 
         label = Label(
             text='Support Red Affair',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='28sp',
             color=(1, 0, 0, 1),
             size_hint=(1, None),
@@ -929,7 +929,7 @@ class SettingsScreen(Screen):
 
         header = Label(
             text='SETTINGS',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='30sp',
             color=(1, 0, 0, 1),
             size_hint=(1, None),
@@ -940,7 +940,7 @@ class SettingsScreen(Screen):
         self.theme_toggle = ToggleButton(
             text='Dark Mode (Red on Black)',
             state='down',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='24sp',
             background_color=(0.2, 0, 0, 1),
             color=(1, 1, 1, 1),
@@ -953,7 +953,7 @@ class SettingsScreen(Screen):
         self.dynamic_lighting_toggle = ToggleButton(
             text='Dynamic Lighting: ON',
             state='down',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='24sp',
             background_color=(0.2, 0, 0, 1),
             color=(1, 1, 1, 1),
@@ -966,7 +966,7 @@ class SettingsScreen(Screen):
         self.dynamic_sound_toggle = ToggleButton(
             text='Dynamic Sound: ON',
             state='down',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='24sp',
             background_color=(0.2, 0, 0, 1),
             color=(1, 1, 1, 1),
@@ -979,7 +979,7 @@ class SettingsScreen(Screen):
         self.music_toggle = ToggleButton(
             text='Music: ON',
             state='down',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='24sp',
             background_color=(0.2, 0, 0, 1),
             color=(1, 1, 1, 1),
@@ -992,7 +992,7 @@ class SettingsScreen(Screen):
         self.dyslexic_font_toggle = ToggleButton(
             text='Dyslexic Font: OFF',
             state='normal',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='24sp',
             background_color=(0.2, 0, 0, 1),
             color=(1, 1, 1, 1),
@@ -1015,7 +1015,7 @@ class SettingsScreen(Screen):
 
         self.track_label = Label(
             text='Now Playing: None',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='18sp',
             color=(1, 0, 0, 1),
             size_hint=(1, None),
@@ -1028,7 +1028,7 @@ class SettingsScreen(Screen):
 
         vol_label = Label(
             text='Music Volume',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='18sp',
             color=(1, 0, 0, 1),
             size_hint=(1, None),
@@ -1050,7 +1050,7 @@ class SettingsScreen(Screen):
 
         self.vol_bar_label = Label(
             text='[          ]',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='20sp',
             color=(1, 0, 0, 1),
             size_hint=(1, None),
@@ -1061,7 +1061,7 @@ class SettingsScreen(Screen):
 
         self.next_track_btn = Button(
             text='Next Track',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='24sp',
             background_color=(0.2, 0, 0, 1),
             color=(1, 1, 1, 1),
@@ -1073,7 +1073,7 @@ class SettingsScreen(Screen):
 
         self.sound_test_btn = Button(
             text='Sound Test',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='24sp',
             background_color=(0.2, 0, 0, 1),
             color=(1, 1, 1, 1),
@@ -1085,7 +1085,7 @@ class SettingsScreen(Screen):
 
         back_btn = Button(
             text='Back',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='24sp',
             background_color=(0.2, 0, 0, 1),
             color=(1, 1, 1, 1),
@@ -1203,7 +1203,7 @@ class PaletteScreen(Screen):
 
         header = Label(
             text='CUSTOM PALETTE',
-            font_name=FONT_PATH if os.path.exists(FONT_PATH) else None,
+            font_name=FONT_PATH if os.path.exists(FONT_PATH) else 'Roboto',
             font_size='30sp',
             color=(1, 0, 0, 1),
             size_hint=(1, None),
