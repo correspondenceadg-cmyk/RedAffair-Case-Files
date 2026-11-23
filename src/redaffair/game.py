@@ -44,6 +44,18 @@ def play_game():
     player_name = input(f"{RED}{BLACK_BG}Your name, detective, if you subscribe to such niceties: {RESET}").strip()
     if not player_name:
         player_name = "Myla-Dean"
+    elif player_name.lower() == "quit":
+        print("\nHang on, wait... is 'Quit' your name, or are you trying to quit the game?")
+        answer = input("(Type 'name' or 'quit game'): ").strip().lower()
+        normalized = answer.replace("'", "").replace("\u2019", "").replace(".", "").replace(",", "").strip()
+        name_confirmations = {"name", "is my name", "it my name", "it is my name", "my name", "its my name", "yes"}
+        exit_confirmations = {"quit", "quit game", "quit the game", "game", "exit", "yes quit", "yes exit"}
+        if normalized in name_confirmations:
+            player_name = "Quit"
+        elif normalized in exit_confirmations or normalized == "":
+            raise KeyboardInterrupt()
+        else:
+            player_name = "Quit"
     print(f"\n{RED}{BLACK_BG}The name's {player_name}. Licensed to poke around in other people's misery.\n")
     print(f"The universe doesn't care. But you should, and here you are.{RESET}\n")
 
@@ -56,6 +68,8 @@ def play_game():
     print("4. Anarchist – No gods, no masters, no parking tickets. Chaotic.")
     while True:
         choice = input(f"Choose your delusion (1-4): {RESET}").strip()
+        if choice.lower() == 'quit':
+            raise KeyboardInterrupt()
         if choice == '1':
             player_lean = "communist"
             break

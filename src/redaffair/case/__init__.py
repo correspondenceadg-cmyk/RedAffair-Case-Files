@@ -22,6 +22,9 @@ class Suspect:
     def __setitem__(self, key, value):
         setattr(self, key, value)
 
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+
 @dataclass
 class Location:
     desc: str = ""
@@ -40,6 +43,9 @@ class Location:
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)
 
 @dataclass
 class Case:

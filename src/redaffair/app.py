@@ -71,12 +71,21 @@ except Exception as e:
     log_crash(f"Failed to import game.py:\n{traceback.format_exc()}")
     raise
 
+WorkshopScreen = None
+FlavorEditorScreen = None
+ImportScreen = None
 try:
-    from .workshop.ui.screen import WorkshopScreen, FlavorEditorScreen, ImportScreen
-except ImportError:
-    WorkshopScreen = None
-    FlavorEditorScreen = None
-    ImportScreen = None
+    from .workshop.ui.screen import WorkshopScreen
+except Exception:
+    pass
+try:
+    from .workshop.ui.screen import FlavorEditorScreen
+except Exception:
+    pass
+try:
+    from .workshop.ui.screen import ImportScreen
+except Exception:
+    pass
 
 try:
     from .case.registry import CASE_SELECT_ENTRIES
@@ -323,8 +332,8 @@ class SplashScreen(Screen):
 
         self.title_box = RelativeLayout(size_hint=(None, None),
                                         pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        title_text = 'RED AFFAIR: CASE FILES'
-        title_font_size = '24sp'
+        title_text = 'RED AFFAIR:\nCASE FILES'
+        title_font_size = '48sp'
         self.title_labels = []
         offsets = [(-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1)]
         for dx, dy in offsets:
@@ -684,7 +693,7 @@ class MenuScreen(Screen):
         self.bind(size=self._update_bg, pos=self._update_bg)
 
         self.title_label = Label(
-            text='RED AFFAIR: CASE FILES',
+            text='RED AFFAIR:\nCASE FILES',
             font_name=FONT_PATH_LOGO if os.path.exists(FONT_PATH_LOGO) else 'Roboto',
             font_size='36sp',
             color=(1, 0, 0, 1),
@@ -1552,7 +1561,7 @@ class RedAffairApp(App):
     current_theme = DARK_THEME
     crt_enabled = True
     dynamic_sound_enabled = True
-    music_enabled = True
+    music_enabled = False
     use_dyslexic_font = False
     custom_palette_enabled = False
     custom_fg_color = (1, 0, 0, 1)
