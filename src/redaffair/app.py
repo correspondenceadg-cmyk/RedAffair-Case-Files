@@ -315,15 +315,16 @@ class SplashScreen(Screen):
             self.bg_rect = Rectangle(size=self.size, pos=self.pos)
         self.layout.bind(size=self._update_bg_rect, pos=self._update_bg_rect)
 
-        self.bg_image = Image(source=asset_path('assets/splash_bg.png'),
-                              allow_stretch=True, keep_ratio=False,
-                              size_hint=(1, 1), pos_hint={'x': 0, 'y': 0})
-        self.layout.add_widget(self.bg_image)
+        if os.path.exists(asset_path('assets/splash_bg.png')):
+            self.bg_image = Image(source=asset_path('assets/splash_bg.png'),
+                                  allow_stretch=True, keep_ratio=False,
+                                  size_hint=(1, 1), pos_hint={'x': 0, 'y': 0})
+            self.layout.add_widget(self.bg_image)
 
         self.title_box = RelativeLayout(size_hint=(None, None),
                                         pos_hint={'center_x': 0.5, 'center_y': 0.5})
         title_text = 'RED AFFAIR: CASE FILES'
-        title_font_size = '36sp'
+        title_font_size = '24sp'
         self.title_labels = []
         offsets = [(-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1)]
         for dx, dy in offsets:
@@ -554,6 +555,8 @@ class GameUI(BoxLayout):
         sys.stdin = GameStdin(self.input_queue)
         try:
             game.play_game()
+        except KeyboardInterrupt:
+            Clock.schedule_once(lambda dt: self._go_back(), 0)
         except SystemExit:
             pass
         except Exception:

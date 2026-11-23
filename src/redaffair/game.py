@@ -1373,7 +1373,7 @@ def play_game():
             help_text()
         elif verb == "quit":
             print("You step back through the airlock. For now, the case remains unsolved; one day going cold. The stars don't care. Neither do you.")
-            sys.exit(0)
+            raise KeyboardInterrupt()
         elif verb in ("notepad", "notes", "notebook"):
             show_notepad()
         elif verb == "theory":

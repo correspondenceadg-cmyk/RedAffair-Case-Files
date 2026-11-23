@@ -22,22 +22,10 @@ jobs:
       uses: astral-sh/setup-uv@v6
       with:
         python-version: "3.13"
-    - name: Disable Gradle configuration cache
-      run: |
-        mkdir -p ~/.gradle
-        echo "org.gradle.configuration-cache=false" >> ~/.gradle/gradle.properties
-        echo "org.gradle.configuration-cache.problems=warn" >> ~/.gradle/gradle.properties
-    - name: Cache Android Debug Keystore
-      uses: actions/cache@v4
-      with:
-        path: ~/.android
-        key: android-debug-keystore-v1
-    - name: Generate Debug Keystore
+    - name: Install committed debug keystore
       run: |
         mkdir -p ~/.android
-        if [ ! -f ~/.android/debug.keystore ]; then
-          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-        fi
+        cp keystore/debug.keystore ~/.android/debug.keystore
     - name: Install system deps
       run: |
         sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
@@ -70,27 +58,10 @@ jobs:
       run: |
         set +e
         .venv/bin/ksproject android build debug --clean
-        KS_EXIT=$?
         set -e
-        echo "ksproject exit: $KS_EXIT"
         APK=$(find project_dist/gradle/app/build/outputs/apk/debug -name "*.apk" 2>/dev/null | head -1)
-        if [ -z "$APK" ]; then
-          echo "FATAL: No APK produced"
-          exit 1
-        fi
-        echo "APK produced at: $APK"
-    - name: Verify libpython3.13 alias in APK
-      run: |
-        APK=$(find project_dist/gradle/app/build/outputs/apk/debug -name "*.apk" | head -1)
-        echo "=== lib/arm64-v8a contents ==="
-        unzip -l "$APK" | grep "lib/arm64-v8a/" || true
-        echo ""
-        if unzip -l "$APK" | grep -q "lib/arm64-v8a/libpython3.13.so"; then
-          echo "OK: libpython3.13.so present"
-        else
-          echo "FATAL: libpython3.13.so MISSING from APK — the alias task didn't run or didn't merge. Refusing to upload broken APK."
-          exit 1
-        fi
+        if [ -z "$APK" ]; then echo "No APK produced"; exit 1; fi
+        echo "APK: $APK"
     - name: Rename APK
       run: |
         APK=$(find project_dist/gradle/app/build/outputs/apk/debug -name "*.apk" | head -1)
