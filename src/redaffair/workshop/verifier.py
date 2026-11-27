@@ -5,7 +5,7 @@ import time
 from .sat import solve
 from ..case import Case, assert_all_invariants
 
-# convictable(case, "thatcher") -> True
+
 def convictable(case, suspect_key):
     if suspect_key not in case.suspects:
         return False
@@ -19,25 +19,24 @@ def convictable(case, suspect_key):
             hits += 1
     return hits >= case.required_incriminating
 
+
 def verify_unique_bruteforce(case):
     convicts = [k for k in case.suspects if convictable(case, k)]
     return len(convicts) == 1
 
+
 def verify_unique_sat(case):
     suspects = list(case.suspects.keys())
     symbols = list(range(1, len(suspects) + 1))
-    clauses = []
-    clauses.append(symbols)
+    clauses = [symbols]
     for i in range(len(symbols)):
-        for j in range(i+1, len(symbols)):
+        for j in range(i + 1, len(symbols)):
             clauses.append([-symbols[i], -symbols[j]])
     for i, k in enumerate(suspects):
         var = symbols[i]
-        if convictable(case, k):
-            clauses.append([var])
-        else:
-            clauses.append([-var])
+        clauses.append([var] if convictable(case, k) else [-var])
     return solve(clauses, symbols)
+
 
 def verify_all(case):
     bf = verify_unique_bruteforce(case)
@@ -47,24 +46,67 @@ def verify_all(case):
         "bruteforce": bf,
         "sat": sat,
         "convictable": convicts,
-        "killer": case.killer_key
+        "killer": case.killer_key,
     }
+
 
 def _check_templates(data):
     if isinstance(data, dict):
         for k, v in data.items():
             if isinstance(k, str) and "[FLAVOR:" in k:
                 return False
-            if not _check_templates(v): return False
+            if not _check_templates(v):
+                return False
     elif isinstance(data, list):
         for v in data:
-            if not _check_templates(v): return False
+            if not _check_templates(v):
+                return False
     elif isinstance(data, str):
         if "[FLAVOR:" in data:
             return False
     return True
 
-# validate_import("{}") -> (False, "Gate 1 Failed (JSON parse)")
+
+def verify_gates(case: Case) -> list:
+    results = []
+
+    results.append({"gate": "schema_parse", "ok": True, "error": None})
+    results.append({"gate": "schema_version", "ok": True, "error": None})
+
+    try:
+        assert_all_invariants(case)
+        results.append({"gate": "invariants", "ok": True, "error": None})
+    except AssertionError as e:
+        results.append({"gate": "invariants", "ok": False, "error": str(e)})
+
+    bf = verify_unique_bruteforce(case)
+    results.append({
+        "gate": "bruteforce_unique",
+        "ok": bf,
+        "error": None if bf else "More than one suspect is convictable",
+    })
+
+    sat = verify_unique_sat(case)
+    results.append({
+        "gate": "sat_unique",
+        "ok": sat,
+        "error": None if sat else "SAT solver failed to find a unique solution",
+    })
+
+    try:
+        data = case.to_dict()
+        templates_ok = _check_templates(data)
+        results.append({
+            "gate": "template_completeness",
+            "ok": templates_ok,
+            "error": None if templates_ok else "Unfilled [FLAVOR:] markers present",
+        })
+    except Exception as e:
+        results.append({"gate": "template_completeness", "ok": False, "error": str(e)})
+
+    return results
+
+
 def validate_import(json_str):
     try:
         data = json.loads(json_str)
@@ -94,6 +136,7 @@ def validate_import(json_str):
         return False, "Gate 6 Failed (Template completeness)"
 
     return True, "Import successful"
+
 
 def save_failed_import(json_str):
     os.makedirs("imports", exist_ok=True)

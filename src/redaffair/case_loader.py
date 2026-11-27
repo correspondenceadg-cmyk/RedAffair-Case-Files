@@ -18,6 +18,7 @@ from case.persistence import load_state
 
 def load_case_for_play(case_id: str, save_path: str = None) -> Case:
     case = load_case(case_id)
+    case.rebuild_flat_evidence()
     if save_path:
         state = load_state(save_path)
         if state:
