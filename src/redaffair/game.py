@@ -450,38 +450,77 @@ def play_game():
             print(RED + BLACK_BG + "╔══ NOTEPAD ═══════════════════════════════════════╗")
             print("║ The notepad is empty. Nothing to review yet.      ║")
             print("╚══════════════════════════════════════════════════╝" + RESET)
-        else:
-            print(RED + BLACK_BG + "╔══ NOTEPAD ═══════════════════════════════════════╗")
-            shown_meta = set()
-            for c in sorted(clues):
-                meta = None
-                for alias, ids in EVIDENCE_ALIASES.items():
-                    if isinstance(ids, list) and c in ids:
-                        meta = alias
-                        break
-                if meta:
-                    if meta not in shown_meta:
-                        shown_meta.add(meta)
-                        name = meta
-                        sources = [evidence_display_name(sc) for sc in ids if sc in clues]
-                        combined_desc = f"║  • {name}  [Sources: {', '.join(sources)}]"
-                        if any(is_misleading(sc) for sc in ids):
-                            combined_desc = f"║  {GRAY}• {name} (suspicious)  [Sources: {', '.join(sources)}]{RESET}"
-                        print(combined_desc)
+            return
+
+        suspect_first = {get_first_name(s['name']) for s in suspects.values()}
+        suspect_full = {s['name'] for s in suspects.values()}
+        all_suspects = suspect_first | suspect_full
+
+        display_entries = []
+        shown_meta = set()
+        for c in sorted(clues):
+            meta = None
+            meta_ids = None
+            for alias, ids in EVIDENCE_ALIASES.items():
+                if isinstance(ids, list) and c in ids:
+                    meta = alias
+                    meta_ids = ids
+                    break
+            if meta:
+                if meta in shown_meta:
+                    continue
+                shown_meta.add(meta)
+                sources = [sc for sc in meta_ids if sc in clues]
+                display_entries.append((meta, sources))
+            else:
+                display_entries.append((evidence_display_name(c), [c]))
+
+        clue_section = []
+        evidence_groups = {}
+        for display_name, source_ids in display_entries:
+            agg_impl = set()
+            agg_exon = set()
+            for cid in source_ids:
+                impl, exon = EVIDENCE_IMPLICATION.get(cid, ([], []))
+                agg_impl.update(impl)
+                agg_exon.update(exon)
+            impl_sus = [n for n in agg_impl if n in all_suspects]
+            exon_sus = [n for n in agg_exon if n in all_suspects]
+            if impl_sus or exon_sus:
+                for name in impl_sus:
+                    key = name.split()[0]
+                    evidence_groups.setdefault(key, {"implicates": [], "exonerates": []})["implicates"].append(display_name)
+                for name in exon_sus:
+                    key = name.split()[0]
+                    evidence_groups.setdefault(key, {"implicates": [], "exonerates": []})["exonerates"].append(display_name)
+            else:
+                is_sus = any(is_misleading(c) for c in source_ids)
+                clue_section.append((display_name, is_sus))
+
+        print(RED + BLACK_BG + "╔══ NOTEPAD ═══════════════════════════════════════╗")
+        if clue_section:
+            print("║ CLUES:                                          ║")
+            for display_name, is_sus in clue_section:
+                if is_sus:
+                    print(f"║  {GRAY}• {display_name} (suspicious){RESET}")
                 else:
-                    display_name = evidence_display_name(c)
-                    if c == "galactic_id":
-                        display_name = "Fake ID"
-                    elif c == "galactic_id2":
-                        display_name = "Victim's ID"
-                    impl, exon = EVIDENCE_IMPLICATION.get(c, (["Unknown"], []))
-                    impl_str = ", ".join(impl) if impl else "None"
-                    exon_str = ", ".join(exon) if exon else "None"
-                    line = f"║  • {display_name}  [Implicates: {impl_str}; Exonerates: {exon_str}]"
-                    if is_misleading(c):
-                        line = f"║  {GRAY}• {display_name} (suspicious)  [Implicates: {impl_str}; Exonerates: {exon_str}]{RESET}"
-                    print(line)
-            print("╚══════════════════════════════════════════════════╝" + RESET)
+                    print(f"║  • {display_name}")
+            print("║")
+        else:
+            print("║ CLUES: none yet.                                ║")
+            print("║")
+        if evidence_groups:
+            print("║ EVIDENCE:                                       ║")
+            for sus_key in sorted(evidence_groups.keys()):
+                entry = evidence_groups[sus_key]
+                print(f"║  {sus_key}:")
+                if entry["implicates"]:
+                    print(f"║    Implicates: {', '.join(entry['implicates'])}")
+                if entry["exonerates"]:
+                    print(f"║    Exonerates: {', '.join(entry['exonerates'])}")
+        else:
+            print("║ EVIDENCE: none yet.                             ║")
+        print("╚══════════════════════════════════════════════════╝" + RESET)
 
     # ---------- Take ----------
     def take(item):
